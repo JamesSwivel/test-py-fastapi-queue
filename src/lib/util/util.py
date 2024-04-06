@@ -1,4 +1,5 @@
 import sys
+import time
 from typing import Union, Dict, TypedDict
 
 
@@ -23,3 +24,11 @@ def pythonVer():
         "verInt": int(ver.major * 1e8 + ver.minor * 1e4 + ver.micro),
     }
     return out
+
+
+def epochMs():
+    return int(time.time() * 1000)
+
+
+def epochSec():
+    return int(time.time())

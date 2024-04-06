@@ -1,0 +1,33 @@
+@HostAddress = http://localhost:8000
+
+
+
+### hello (get)
+GET {{HostAddress}}/hello
+Accept: application/json
+
+{"data":"hello"}
+
+### hello (post)
+POST {{HostAddress}}/hello
+Accept: application/json
+
+{"data":"hello"}
+
+### getInfo (post)
+POST {{HostAddress}}/getInfo
+Accept: application/json
+
+{"data":"hello"}
+
+### getInfo (post)
+POST {{HostAddress}}/getInfo
+Accept: application/json
+
+{"data":"not hello"}
+
+### put (post)
+POST {{HostAddress}}/put
+Accept: application/json
+
+{"data":"hello"}

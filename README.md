@@ -14,3 +14,17 @@
   ```bash
   $ pip install -r requirements.txt
   ```
+
+## vscode extension
+- Commonly used extension for Python  
+  - python   
+    `ext install ms-python.python`   
+  - pylance  
+    `ext install ms-python.vscode-pylance`   
+  - Black Formatter  
+  - `ext install ms-python.black-formatter`   
+- REST Client  
+  `ext install humao.rest-client`
+
+## test api
+- `testApi.http` is the file to test APIs using extension `REST Client`

@@ -4,6 +4,8 @@ import sys
 import os
 from typing import Union, Callable, TypeVar, List, TypedDict, Dict, Any, NamedTuple
 
+from fastapi import FastAPI
+import uvicorn
 
 ########################################################
 ## Change to project root dir
@@ -27,12 +29,12 @@ if len(sysDirsToAppend) == 0:
 ########################################################
 ## import self-developed modules/packages
 ########################################################
-from app import App
 import util as U
+from app import api
 
 
 def main():
-    App.main(__file__)
+    uvicorn.run(api, host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":

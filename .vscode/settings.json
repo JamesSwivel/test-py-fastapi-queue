@@ -1,8 +1,15 @@
 {
     "cSpell.words": [
+        "Epms",
         "fastapi",
         "getpid",
+        "humao",
+        "jwjwjw",
+        "pydantic",
         "pyenv",
+        "pylance",
+        "strerror",
+        "uvicorn",
         "virtualenv"
     ],
     // python file uses black formatter

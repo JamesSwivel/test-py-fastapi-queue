@@ -1,6 +1,7 @@
 import os
 import sys
 import datetime
+import queue
 from typing import Union, NoReturn, TypedDict, Literal, Final
 
 from .err import SWErr
@@ -143,6 +144,15 @@ class Log:
                 out["isRuntimeErr"] = True
                 out["err"] = "memory err (reference)"
 
+            ## queue errors
+            elif isinstance(e, queue.Full):
+                out["isRuntimeErr"] = True
+                out["err"] = "queue full"
+
+            elif isinstance(e, queue.Empty):
+                out["isRuntimeErr"] = True
+                out["err"] = "queue empty"
+
             ## Python common runtime error
             elif (
                 ## value, key, attribute
@@ -257,7 +267,7 @@ class Log:
           The cascading prefix shows useful exception trace history.
         """
         msg1 = f"{cls.toExceptionStr(msg)}"
-        isFirstPrefix = msg1[0] != "|"
+        isFirstPrefix = msg1 == "" or msg1[0] != "|"
         err = ""
         if isFirstPrefix:
             err = f"|{prefix}| {msg1}"
@@ -277,7 +287,7 @@ class Log:
         """
         msg1 = f"{cls.toExceptionStr(msg)}"
         err = ""
-        isFirstPrefix = msg1[0] != "|"
+        isFirstPrefix = msg1 == "" or msg1[0] != "|"
         if isFirstPrefix:
             err = f"|{prefix}| {msg1}"
         else:
