@@ -1,0 +1,10 @@
+## ignore all temporary files
+core
+*.swp
+*.pyc
+
+## ignore temporary files by Jupyter notebook
+ipynb_checkpoints/
+
+## Just in case, some nodejs tools are used, ignore node_modules
+node_modules/

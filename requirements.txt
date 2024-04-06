@@ -1,0 +1,9 @@
+## python virtualenv
+## $ pyenv update
+## $ pyenv install 3.11.8
+## $ pyenv virtualenv 3.11.8 test-py-fastapi-queue
+## $ pyenv activate test-py-fastapi-queue
+
+
+## [all] is recommended since it also installs uvicorn and uvloop for faster web performance
+fastapi[all]==0.110.1
