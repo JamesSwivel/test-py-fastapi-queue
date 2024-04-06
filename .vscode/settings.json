@@ -11,6 +11,8 @@
         "pylance",
         "strerror",
         "uvicorn",
+        "uvloop",
+        "venv",
         "virtualenv"
     ],
     // python file uses black formatter

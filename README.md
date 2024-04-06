@@ -9,20 +9,31 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
   Even though the worker may block self worker thread during the job processing, it will **NOT** block the main thread.
 - Job item is a TypeDict that includes data payload and a asyncio.Future like JavaScript `promise`.  When the worker finishes the job processing, it will notify the result to the original API who is awaiting for the result.
 
-## environment
+## Environment
 - Python `3.11.8`
-- WSL/Ubuntu `22.04.x` (should run on other platforms I guess but not thoroughly tested)
-- virtualenv
+- `WSL/Ubuntu` 22.04.x or `Windows` 
+- virtualenv using pyenv (Linux/Ubuntu)
   ```bash
   $ pyenv update
   $ pyenv install 3.11.8
   $ pyenv virtualenv 3.11.8 test-py-fastapi-queue
   $ pyenv activate test-py-fastapi-queue
   ```
+- virtualenv using py (Windows)
+  ```bat
+  > cd <projectDir>
+  > py -3.11.8 -m venv winEnv
+  > winEnv\Scripts\activate
+  ```
 - Install packages on virtualenv
   ```bash
   $ pip install -r requirements.txt
   ```
+
+## About fastapi package
+- It is suggested to install by `pip install fastapi[all]` as it will include extra dependent packages like `uvicorn` and `uvloop` for optimal async performance
+- This repo is based on a specific version `fastapi[all]==0.110.1`.  
+  For details, refer to [requirements.txt](./requirements.txt)
 
 ## vscode extension
 - Commonly used extension for Python  
@@ -32,7 +43,7 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
     `ext install ms-python.vscode-pylance`   
   - Black Formatter  
   - `ext install ms-python.black-formatter`   
-- REST Client  
+- REST Client (like postman)  
   `ext install humao.rest-client`
 
 ## Run the API server and how to test it
