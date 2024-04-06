@@ -1,5 +1,7 @@
 import asyncio
-from fastapi import FastAPI, Body
+import queue
+from http import HTTPStatus
+from fastapi import FastAPI, Body, HTTPException
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any
 
 from .worker import QueueWorker, QueueItem
@@ -49,13 +51,20 @@ async def initFastApi_():
                 promise = asyncio.Future()
                 uuid = U.uuid()
                 item: QueueItem = {"id": uuid, "message": f"hello-{uuid[-4:]}", "promise": promise}
-                q.put(item, block=False)
-                U.logD(f"{prefix}| Item successfully put, , count={q.qsize()}")
+                try:
+                    q.put(item, block=False)
+                    U.logD(f"{prefix}| Item successfully put, , count={q.qsize()}")
+                except queue.Full:
+                    raise HTTPException(
+                        status_code=HTTPStatus.TOO_MANY_REQUESTS, detail="Too many requests (job queue full)"
+                    )
 
                 ## await for result from worker
                 result = await promise
                 U.logD(f"{prefix}| result[{uuid}]={result}")
                 return {"data": {"id": uuid, "result": result}}
+            except HTTPException as e:
+                raise e
             except Exception as e:
                 U.logPrefixE(prefix, e)
 
