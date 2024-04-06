@@ -73,7 +73,7 @@ class QueueWorker(threading.Thread):
                     continue
 
                 ## process the queue item
-                self.onQueueItem(qItem)
+                self.onQueueItem_(qItem)
 
                 ## it is to emulate CPU intensive task
                 time.sleep(3)
@@ -81,12 +81,13 @@ class QueueWorker(threading.Thread):
             except Exception as e:
                 U.logPrefixE(prefix, e)
 
-    def onQueueItem(self, item: QueueItem):
-        funcName = self.onQueueItem.__name__
+    def onQueueItem_(self, item: QueueItem):
+        funcName = self.onQueueItem_.__name__
         prefix = funcName
         try:
             nowEpms = U.epochMs()
-            U.logD(f"{prefix} {item}")
-            item["promise"].set_result(f"done at {nowEpms}")
+            result = U.uuid()[-4:]
+            U.logD(f"{prefix} {item}, result={result}")
+            item["promise"].set_result(result)
         except Exception as e:
             U.throwPrefix(prefix, e)

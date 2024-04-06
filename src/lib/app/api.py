@@ -1,9 +1,8 @@
-import time
 import asyncio
 from fastapi import FastAPI, Body
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any
 
-from .worker import QueueWorker
+from .worker import QueueWorker, QueueItem
 import util as U
 
 
@@ -48,13 +47,15 @@ async def initFastApi_():
 
                 ## enqueue an item
                 promise = asyncio.Future()
-                q.put({"id": "1", "message": "hello", "promise": promise}, block=False)
+                uuid = U.uuid()
+                item: QueueItem = {"id": uuid, "message": f"hello-{uuid[-4:]}", "promise": promise}
+                q.put(item, block=False)
                 U.logD(f"{prefix}| Item successfully put, , count={q.qsize()}")
 
                 ## await for result from worker
                 result = await promise
-                U.logD(f"result={result}")
-                return {"data": f"result from worker={result}"}
+                U.logD(f"{prefix}| result[{uuid}]={result}")
+                return {"data": {"id": uuid, "result": result}}
             except Exception as e:
                 U.logPrefixE(prefix, e)
 
