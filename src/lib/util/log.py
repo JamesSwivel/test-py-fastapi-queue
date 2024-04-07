@@ -2,6 +2,8 @@ import os
 import sys
 import datetime
 import queue
+import asyncio
+from http import HTTPStatus
 from typing import Union, NoReturn, TypedDict, Literal, Final
 
 from .err import SWErr
@@ -152,6 +154,11 @@ class Log:
             elif isinstance(e, queue.Empty):
                 out["isRuntimeErr"] = True
                 out["err"] = "queue empty"
+
+            ## asyncio.TimeoutError
+            elif isinstance(e, asyncio.TimeoutError):
+                out["isRuntimeErr"] = True
+                out["err"] = "async timeout"
 
             ## Python common runtime error
             elif (
