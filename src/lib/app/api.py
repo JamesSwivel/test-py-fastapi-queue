@@ -87,7 +87,7 @@ async def initFastApi_():
                     U.logD(f"{prefix} job successfully put, count={q.qsize()}")
                 except queue.Full:
                     raise HTTPException(
-                        status_code=HTTPStatus.TOO_MANY_REQUESTS, detail=f"Too many requests (job queue full)"
+                        status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=f"Service unavailable (job queue full)"
                     )
 
                 ## await for result from worker
