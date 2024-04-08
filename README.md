@@ -8,7 +8,7 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
 - The worker processes the job like simulating a CPU intensive task that may run for a few seconds.  
   Even though the worker may block self worker thread during the job processing, it will **NOT** block the main thread.
 - Job item is a TypeDict that includes data payload and a `asyncio.Future` object similar to JavaScript `promise`.  When the worker finishes the job processing, it will notify the result to the original API who is awaiting for the result.  
-- If API finds the worker queue is already full, i.e. too many pending jobs, it may return HTTP status code `429 too many requests`. 
+- If API finds the worker queue is already full, i.e. too many pending jobs, it may return HTTP status code `503 service unavailable`. 
   
 Use cases
 - This repo uses single worker.  However, multiple workers running in multiple threads can be implemented in similar way.  Also, there can be multiple worker queues that the jobs can be delivered to different workers.
@@ -17,7 +17,8 @@ Use cases
 HTTP status code
 - `500` internal server error
 - `504` gateway timeout, e.g. API request timeout waiting for worker result
-- `429` too many requests, e.g. API request finds out job queue already full 
+- `503` service unavailable, e.g. API request finds out job queue already full 
+- `429` too many requests, e.g. API has been requested exceeding the rate limit, e.g. an user has 60+ requests in the last min.
 
 About `async`/`await` and `asyncio.Future`
 - First, `async`/`await` constructs are only applicable to I/O bound functions which will **NOT** block main thread.
