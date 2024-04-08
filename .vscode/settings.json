@@ -41,5 +41,9 @@
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     // terminal settings
-    "terminal.integrated.enableMultiLinePasteWarning": "always"
+    "terminal.integrated.enableMultiLinePasteWarning": "always",
+    "rest-client.previewResponseInUntitledDocument": false,
+    "rest-client.environmentVariables": {
+        "$shared": {}
+    }
 }
