@@ -27,8 +27,14 @@ Accept: application/json
 
 {"data":"not hello"}
 
-### put (post)
+### (post) message job
 POST {{HostAddress}}/put
 Accept: application/json
 
 {"data":"hello xdata team"}
+
+### (post) pdf job
+POST {{HostAddress}}/put
+Accept: application/json
+
+{"data":"hello xdata team", "jobType": "pdf2image"}

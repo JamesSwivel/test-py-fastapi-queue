@@ -12,4 +12,8 @@
 fastapi[all]==0.110.1
 
 ## Convert pdf to images
+## NOTE: 
+## - pdf2image needs poppler utility
+## - To install poppler in Ubuntu, sudo apt install -y poppler-utils
 pdf2image==1.17.0
+

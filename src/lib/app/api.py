@@ -39,13 +39,22 @@ async def initFastApi_():
         ## Create a FastAPI instance
         api = FastAPI()
 
-        ## Start a queue worker in separated thread
-        startedPromise: asyncio.Future[bool] = asyncio.Future()
-        worker = QueueWorker("messageWorker", startedPromise, 10)
-        worker.start()
+        ## Start a message worker in separated thread
+        messageWorkerStartedPromise: asyncio.Future[bool] = asyncio.Future()
+        messageWorker = QueueWorker("messageWorker", messageWorkerStartedPromise, 10)
+        messageWorker.start()
 
-        ## await until worker is running
-        await startedPromise
+        ## Start a pdf worker in separated thread
+        PDF_WORKER_COUNT = 4
+        pdfWorkerStartedPromises = [asyncio.Future() for i in range(PDF_WORKER_COUNT)]
+        pdfWorkers = [QueueWorker(f"pdfWorker{i+1}", pdfWorkerStartedPromises[i], 20) for i in range(PDF_WORKER_COUNT)]
+        for i in range(PDF_WORKER_COUNT):
+            pdfWorkers[i].start()
+
+        ## await until workers are running
+        await messageWorkerStartedPromise
+        for i in range(PDF_WORKER_COUNT):
+            await pdfWorkerStartedPromises[i]
 
         @api.get("/hello")
         @api.post("/hello")
@@ -64,43 +73,90 @@ async def initFastApi_():
                 U.logPrefixE(prefix, e)
 
         @api.post("/put")
-        async def put(data: str = Body(..., embed=True)):
+        async def put(
+            data: str = Body(..., embed=True),
+            jobTypeStr: str = Body(embed=True, default=QueueJobType.MESSAGE, alias="jobType"),
+        ):
             jobId = U.uuid()
             funcName = put.__name__
             prefix = f"{funcName}[{jobId}]"
             try:
-                q = worker.jobQueue()
-                U.logD(f"{prefix} putting message job to queue, count={q.qsize()}...")
 
-                ## job type
-                jobType = "hells"
+                ## check jobType
+                jobQueue: queue.Queue[QueueJob]
+                targetWorker: QueueWorker
+                jobType: QueueJobType = QueueJobType.MESSAGE
+                if jobTypeStr == QueueJobType.MESSAGE:
+                    jobType = QueueJobType.MESSAGE
+                    jobQueue = messageWorker.jobQueue()
+                    targetWorker = messageWorker
+                elif jobTypeStr == QueueJobType.PDF2IMAGE:
+                    jobType = QueueJobType.PDF2IMAGE
 
-                ## enqueue a job
-                promise: asyncio.Future[QueueJobResult] = asyncio.Future()
-                job: QueueJob = {
-                    "createEpms": U.epochMs(),
-                    "id": jobId,
-                    "jobType": QueueJobType.MESSAGE,
-                    "jobData": {
-                        "tag": QueueJobType.MESSAGE,
-                        "randomNo": random.randint(1, 10),
-                        "message": f"{data}-{jobId[-4:]}",
-                    },
-                    "promise": promise,
-                }
+                    ## Get all current queue size of pdf workers
+                    ## NOTE: If there is running task, add 1 to the size since it is still running
+                    queueSizes = [
+                        pdfWorkers[i].jobQueue().qsize() + 1 if pdfWorkers[i].isRunningJob() else 0
+                        for i in range(PDF_WORKER_COUNT)
+                    ]
+
+                    ## Get the pdf job queue which has the smallest queue size
+                    queueIdxMinSize = queueSizes.index(min(queueSizes))
+                    targetWorker = pdfWorkers[queueIdxMinSize]
+                    jobQueue = targetWorker.jobQueue()
+
+                else:
+                    raise HTTPException(
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"invalid job type={jobTypeStr}"
+                    )
+
+                U.logD(f"{prefix} putting job[{targetWorker.name()}] to queue, count={jobQueue.qsize()}...")
+
+                ## This is result promise that will be awaited until worker completes the task
+                resultWaitSec = 5
+                resultPromise: asyncio.Future[QueueJobResult] = asyncio.Future()
+
+                ## Construct a message job
+                if jobType == QueueJobType.MESSAGE:
+                    job: QueueJob = {
+                        "createEpms": U.epochMs(),
+                        "id": jobId,
+                        "jobType": jobType,
+                        "jobData": {
+                            "tag": jobType,
+                            "randomNo": random.randint(1, 10),
+                            "message": f"{data}-{jobId[-4:]}",
+                        },
+                        "promise": resultPromise,
+                    }
+                    targetWorker = messageWorker
+
+                ## Construct a pdf2image job
+                elif jobType == QueueJobType.PDF2IMAGE:
+                    resultWaitSec = 60
+                    job: QueueJob = {
+                        "createEpms": U.epochMs(),
+                        "id": jobId,
+                        "jobType": jobType,
+                        "jobData": {
+                            "tag": jobType,
+                            "pdfFilePath": f"./data/regal-17pages.pdf",
+                        },
+                        "promise": resultPromise,
+                    }
+
                 try:
                     ## if putting non-block (block=False), it will throw exception if queue is already full
-                    q.put(job, block=False)
-                    U.logD(f"{prefix} job successfully put, count={q.qsize()}")
+                    jobQueue.put(job, block=False)
+                    U.logD(f"{prefix} job[{targetWorker.name()}] successfully submitted, count={jobQueue.qsize()}")
                 except queue.Full:
                     raise HTTPException(
                         status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=f"Service unavailable (job queue full)"
                     )
 
                 ## await for result from worker
-                MAX_WAIT_SEC = 5
-                async with asyncio.timeout(MAX_WAIT_SEC):
-                    result = await promise
+                async with asyncio.timeout(resultWaitSec):
+                    result = await resultPromise
 
                 ## display result
                 U.logD(f"{prefix} result[{jobId}]={result}")

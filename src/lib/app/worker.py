@@ -2,6 +2,7 @@ import asyncio
 import threading
 import time
 import queue
+import os
 from queue import Queue
 from enum import Enum
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, Optional, Literal
@@ -9,7 +10,7 @@ import pdf2image
 import util as U
 
 
-class QueueJobType(Enum):
+class QueueJobType(str, Enum):
     MESSAGE = "message"
     PDF2IMAGE = "pdf2image"
 
@@ -47,7 +48,7 @@ class QueueWorker(threading.Thread):
 
     ## limit the instance variable
     ## Why? avoid bugs some methods created wrong instance variable
-    __slots__ = ("workerName_", "jobQueue_", "threadId_", "startedPromise_", "isWorkerStarted_")
+    __slots__ = ("workerName_", "jobQueue_", "threadId_", "startedPromise_", "isWorkerStarted_", "isRunningJob_")
 
     def __init__(self, workerName: str, startedPromise: asyncio.Future[bool], maxSize=QUEUE_MAX_SIZE):
         funcName = f"{QueueWorker.__name__}.ctor"
@@ -63,13 +64,16 @@ class QueueWorker(threading.Thread):
             self.startedPromise_ = startedPromise
 
             ## create job queue
-            self.jobQueue_: Queue[QueueJob] = Queue(maxsize=QueueWorker.QUEUE_MAX_SIZE)
+            self.jobQueue_: Queue[QueueJob] = Queue(maxsize=maxSize)
 
             ## get thread id
             threadId = threading.current_thread().ident
             self.threadId_: int = threadId if threadId is not None else 0
         except Exception as e:
             U.throwPrefix(prefix, e)
+
+    def name(self):
+        return self.workerName_
 
     def run(self):
         self.worker_()
@@ -83,6 +87,9 @@ class QueueWorker(threading.Thread):
     def isJobQueueEmpty(self):
         return self.jobQueue_.empty()
 
+    def isRunningJob(self):
+        return self.isRunningJob_
+
     def jobQueueMaxSize(self):
         return self.jobQueue_.maxsize
 
@@ -94,11 +101,12 @@ class QueueWorker(threading.Thread):
         if not self.isWorkerStarted_:
             self.startedPromise_.set_result(True)
             self.isWorkerStarted_ = True
-            U.logI(f"{prefix} running...")
+            U.logI(f"{prefix} running... maxQueueSize={self.jobQueue_.maxsize}")
 
         lastAliveEpms = U.epochMs()
         while True:
             try:
+                self.isRunningJob_ = False
                 nowEpms = U.epochMs()
 
                 ## Print alive message every 5mins
@@ -123,7 +131,7 @@ class QueueWorker(threading.Thread):
 
     def onQueueJob_(self, job: QueueJob):
         funcName = self.onQueueJob_.__name__
-        prefix = f"{funcName}[{job['id']}]"
+        prefix = f"{self.workerName_}.{funcName}[{job['id']}]"
         result: QueueJobResult = {
             "errCode": "",
             "err": "",
@@ -134,7 +142,8 @@ class QueueWorker(threading.Thread):
         }
         resultPromise: Optional[asyncio.Future["QueueJobResult"]] = None
         try:
-            U.logD(f"{prefix} {job}")
+            self.isRunningJob_ = True
+            U.logW(f"{prefix} {job}")
 
             ## result promise needs to obtain earlier.
             ## In case of exception, it will be used to return errcode/err
@@ -205,10 +214,13 @@ class QueueWorker(threading.Thread):
         prefix = funcName
         try:
             pdfPath = jobData["pdfFilePath"]
-            pages = pdf2image.convert_from_path(pdfPath)
+            pages = pdf2image.convert_from_path(pdfPath, thread_count=4)
             if pages is not None and len(pages) > 0:
+                basedDir = f"./out/pdf2image/{job['id']}"
+                os.makedirs(basedDir)
                 for idx, page in enumerate(pages):
-                    page.save(f"./out/image-{idx:0>2}.png")
+                    page.save(f"{basedDir}/image-{idx:0>2}.png")
             jobResult["data"] = f"job[{jobData['tag']}] finished ({U.epochMs()}), nPages={len(pages)}"
         except Exception as e:
+            U.logPrefixE(prefix, e)
             U.throwPrefix(prefix, e)
