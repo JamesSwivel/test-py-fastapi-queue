@@ -19,12 +19,13 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
   > NOTE: each worker has its own job queue
 - The methodologies of this repo may be applied to some use case like `PaddleOCR` or `pdf-to-image` processing which are CPU intensive tasks by nature, but the processing should **NOT** block incoming http requests.
 
-## Performance figures (pdf worker)
-- Hardware config  
-  CPU: AMD Ryzen 9 7940HS / 32GB RAM / Average CPU Mark: 30524
-- no. of pdf workers = 8
-- pdf file: [17-page pdf](./data/regal-17pages.pdf)
-- output png dir: `./out/pdf2image/<uuid>/<image.NN>.png`
+## Performance stats - single and multiple pdf workers
+- The test is performed
+  - Hardware config  
+    CPU: AMD Ryzen 9 7940HS / 32GB RAM / Average CPU Mark: 30524
+  - no. of pdf workers = 8
+  - pdf file: [17-page pdf](./data/regal-17pages.pdf)
+  - output png dir: `./out/pdf2image/<uuid>/<image.NN>.png`
 - Statistics processing 8 x pdf by 8 x workers concurrently.  The average processing time is around 7sec, which is very impressive.
 - Since it takes around 6 sec to process 1 x pdf by 1 x worker, this means multiple workers can achieve fast concurrent processing.  
   <img src="./doc/images/pdf2image_result.png" width="800">
