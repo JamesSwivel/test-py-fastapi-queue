@@ -10,7 +10,7 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
 - Job item is a TypeDict that includes data payload and a `asyncio.Future` object similar to JavaScript `promise`.  When the worker finishes the job processing, it will notify the result to the original API who is awaiting for the result.  
 - If API finds the worker queue is already full, i.e. too many pending jobs, it may return HTTP status code `503 service unavailable`. 
   
-Use cases
+## Use cases
 - This repo demonstrates how multiple workers that are able to work with incoming requests concurrently.  
 - There are two types of demo workers.
   - The first one is called `messageWorker` and there is one worker thread for this type.  
@@ -19,42 +19,23 @@ Use cases
   > NOTE: each worker has its own job queue
 - The methodologies of this repo may be applied to some use case like `PaddleOCR` or `pdf-to-image` processing which are CPU intensive tasks by nature, but the processing should **NOT** block incoming http requests.
 
-Performance figures (pdf worker)
+## Performance figures (pdf worker)
 - Hardware config  
   CPU: AMD Ryzen 9 7940HS / 32GB RAM / Average CPU Mark: 30524
 - no. of pdf workers = 8
 - pdf file: [17-page pdf](./data/regal-17pages.pdf)
 - output png dir: `./out/pdf2image/<uuid>/<image.NN>.png`
 - Statistics processing 8 x pdf by 8 x workers concurrently.  The average processing time is around 7sec, which is very impressive.
-- Since it takes around 6 sec to process 1 x pdf by 1 x worker, this means multiple workers can achieve fast concurrent processing.
-  ```csv
-  2024-04-09 16:10:57.993`D`put[c7377335-f1d2-4c71-aaac-620bb7dc528b] result[c7377335-f1d2-4c71-aaac-620bb7dc528b]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650257968), nPages=17', 'workerName': 'pdfWorker1', 'dequeueElapsedMs': 1, 'processElapsedMs': 7109, 'totalElapsedMs': 7110}
-  INFO:     127.0.0.1:44562 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:58.295`D`put[67430da4-dbdb-4019-9d37-9317f74c2259] result[67430da4-dbdb-4019-9d37-9317f74c2259]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650258263), nPages=17', 'workerName': 'pdfWorker3', 'dequeueElapsedMs': 0, 'processElapsedMs': 6961, 'totalElapsedMs': 6961}
-  INFO:     127.0.0.1:44566 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:58.396`D`put[71f84582-0232-4cb0-98e9-b17c2d45e69d] result[71f84582-0232-4cb0-98e9-b17c2d45e69d]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650258312), nPages=17', 'workerName': 'pdfWorker2', 'dequeueElapsedMs': 0, 'processElapsedMs': 7242, 'totalElapsedMs': 7242}
-  INFO:     127.0.0.1:44564 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:58.896`D`put[e55ca860-a749-45bb-b4c3-b1e61836c498] result[e55ca860-a749-45bb-b4c3-b1e61836c498]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650258811), nPages=17', 'workerName': 'pdfWorker4', 'dequeueElapsedMs': 1, 'processElapsedMs': 7267, 'totalElapsedMs': 7268}
-  INFO:     127.0.0.1:44582 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:58.997`D`put[93ea29f5-56fe-4fd6-a133-d6cb2327b824] result[93ea29f5-56fe-4fd6-a133-d6cb2327b824]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650258984), nPages=17', 'workerName': 'pdfWorker5', 'dequeueElapsedMs': 0, 'processElapsedMs': 7192, 'totalElapsedMs': 7192}
-  INFO:     127.0.0.1:44594 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:59.098`D`put[d52e0655-c745-4721-912f-6316924aa4e3] result[d52e0655-c745-4721-912f-6316924aa4e3]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650259067), nPages=17', 'workerName': 'pdfWorker6', 'dequeueElapsedMs': 0, 'processElapsedMs': 7026, 'totalElapsedMs': 7026}
-  INFO:     127.0.0.1:44606 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:59.199`D`put[9bce37c7-37ad-4e33-996b-809c2938e446] result[9bce37c7-37ad-4e33-996b-809c2938e446]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650259197), nPages=17', 'workerName': 'pdfWorker7', 'dequeueElapsedMs': 1, 'processElapsedMs': 6924, 'totalElapsedMs': 6925}
-  INFO:     127.0.0.1:44612 - "POST /put HTTP/1.1" 200 OK
-  2024-04-09 16:10:59.500`D`put[1fe25bf8-3c34-405b-8ea5-c5168396e13c] result[1fe25bf8-3c34-405b-8ea5-c5168396e13c]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650259401), nPages=17', 'workerName': 'pdfWorker8', 'dequeueElapsedMs': 1, 'processElapsedMs': 6880, 'totalElapsedMs': 6881}
-  INFO:     127.0.0.1:44620 - "POST /put HTTP/1.1" 200 OK
-  ```
-- 
-- 
+- Since it takes around 6 sec to process 1 x pdf by 1 x worker, this means multiple workers can achieve fast concurrent processing.  
+  <img src="./doc/images/pdf2image_result.png" width="800">
 
-HTTP status code
+## HTTP status code
 - `500` internal server error
 - `504` gateway timeout, e.g. API request timeout waiting for worker result
 - `503` service unavailable, e.g. API request finds out job queue already full 
 - `429` too many requests, e.g. API has been requested exceeding the rate limit, e.g. an user has 60+ requests in the last min.
 
-About `async`/`await` and `asyncio.Future`
+## About `async`/`await` and `asyncio.Future`
 - First, `async`/`await` constructs are only applicable to I/O bound functions which will **NOT** block main thread.
   It does **NOT** work for CPU intensive tasks.
 - `asyncio.Future` is an instance created by `asyncio.Future()`.  It is similar to JavaScript `Promise` that it can be awaited for result that will happen at later time.  The `await` will be returned if the `asyncio.Future` object is assigned with result or exception.  
