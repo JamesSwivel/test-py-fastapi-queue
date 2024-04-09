@@ -97,9 +97,15 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
   `ext install humao.rest-client`
 
 ## Run the API server and how to test it
-- First and foremost, activate the virtualenv.
+- First and foremost, check python version, installed packages and dependent `poppler`
+- Activate the virtualenv
 - Run the API server by `python src/main.py`
-- `testApi.http` is the file to test APIs using extension `REST Client`
+- `testApi.http` is the file to test APIs using extension `REST Client`  
+- For example:  
+  - Click `Send Request` (arrow "1") to send HTTP POST request to `messageWorker` (simulate CPU intensive task, running in 3 or 10secs) 
+  - Click `Send Request` (arrow "2") to send HTTP POST request to `pdfWorker` (convert pdf to images)
+
+  <img src="./doc/images/RestClientTest.png" width="500">
 
 ## References
 - https://superfastpython.com/thread-queue/
