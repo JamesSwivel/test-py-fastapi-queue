@@ -26,8 +26,8 @@ Performance figures (pdf worker)
 - pdf file: [17-page pdf](./data/regal-17pages.pdf)
 - output png dir: `./out/pdf2image/<uuid>/<image.NN>.png`
 - Statistics processing 8 x pdf by 8 x workers concurrently.  The average processing time is around 7sec, which is very impressive.
-  > It takes around 6 sec to process 1 x pdf by 1 x worker.
-  ```log
+- Since it takes around 6 sec to process 1 x pdf by 1 x worker, this means multiple workers can achieve fast concurrent processing.
+  ```csv
   2024-04-09 16:10:57.993`D`put[c7377335-f1d2-4c71-aaac-620bb7dc528b] result[c7377335-f1d2-4c71-aaac-620bb7dc528b]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650257968), nPages=17', 'workerName': 'pdfWorker1', 'dequeueElapsedMs': 1, 'processElapsedMs': 7109, 'totalElapsedMs': 7110}
   INFO:     127.0.0.1:44562 - "POST /put HTTP/1.1" 200 OK
   2024-04-09 16:10:58.295`D`put[67430da4-dbdb-4019-9d37-9317f74c2259] result[67430da4-dbdb-4019-9d37-9317f74c2259]={'errCode': '', 'err': '', 'data': 'job[QueueJobType.PDF2IMAGE] finished (1712650258263), nPages=17', 'workerName': 'pdfWorker3', 'dequeueElapsedMs': 0, 'processElapsedMs': 6961, 'totalElapsedMs': 6961}
