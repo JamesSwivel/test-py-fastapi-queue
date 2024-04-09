@@ -31,4 +31,4 @@ Accept: application/json
 POST {{HostAddress}}/put
 Accept: application/json
 
-{"data":"hello"}
+{"data":"hello xdata team"}
