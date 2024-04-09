@@ -25,6 +25,7 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
   - no. of pdf workers = 8
   - pdf file: [17-page pdf](./data/regal-17pages.pdf)
   - output png dir: `./out/pdf2image/<uuid>/<image.NN>.png`
+  - OS: WSL/Ubuntu 22.04.x
 - Statistics processing 8 x pdf by 8 x workers concurrently.  The average processing time is around 7sec, which is very impressive.
 - Since it takes around 6 sec to process 1 x pdf by 1 x worker, this means multiple workers can achieve fast concurrent processing.  
   <img src="./doc/images/pdf2image_result.png" width="800">
