@@ -12,6 +12,7 @@
         "pylance",
         "Ryzen",
         "strerror",
+        "userpw",
         "uvicorn",
         "uvloop",
         "venv",
