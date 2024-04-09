@@ -10,6 +10,7 @@
         "pydantic",
         "pyenv",
         "pylance",
+        "Ryzen",
         "strerror",
         "uvicorn",
         "uvloop",
