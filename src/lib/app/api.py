@@ -110,7 +110,7 @@ async def initFastApi_():
                         status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"invalid job type={jobTypeStr}"
                     )
 
-                U.logD(f"{prefix} putting job[{targetWorker.name()}] to queue, count={jobQueue.qsize()}...")
+                U.logD(f"{prefix} [{targetWorker.name()}] putting job to queue, count={jobQueue.qsize()}...")
 
                 ## This is result promise that will be awaited until worker completes the task
                 resultWaitSec = 5
@@ -148,7 +148,7 @@ async def initFastApi_():
                 try:
                     ## if putting non-block (block=False), it will throw exception if queue is already full
                     jobQueue.put(job, block=False)
-                    U.logD(f"{prefix} job[{targetWorker.name()}] successfully submitted, count={jobQueue.qsize()}")
+                    U.logD(f"{prefix} [{targetWorker.name()}] job successfully submitted, count={jobQueue.qsize()}")
                 except queue.Full:
                     raise HTTPException(
                         status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=f"Service unavailable (job queue full)"
