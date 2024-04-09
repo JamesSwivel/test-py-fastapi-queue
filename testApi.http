@@ -1,4 +1,4 @@
-@HostAddress = http://localhost:8000
+@HostAddress = http://0.0.0.0:8000
 
 ### hello (get)
 GET {{HostAddress}}/hello
