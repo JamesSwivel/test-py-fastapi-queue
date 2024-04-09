@@ -5,7 +5,7 @@ from http import HTTPStatus
 from fastapi import FastAPI, Body, HTTPException
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, NoReturn
 
-from .worker import QueueWorker, QueueJob, QueueJobResult
+from .worker import QueueWorker, QueueJob, QueueJobResult, QueueJobType
 import util as U
 
 
@@ -41,7 +41,7 @@ async def initFastApi_():
 
         ## Start a queue worker in separated thread
         startedPromise: asyncio.Future[bool] = asyncio.Future()
-        worker = QueueWorker(startedPromise, 10)
+        worker = QueueWorker("messageWorker", startedPromise, 10)
         worker.start()
 
         ## await until worker is running
@@ -70,15 +70,22 @@ async def initFastApi_():
             prefix = f"{funcName}[{jobId}]"
             try:
                 q = worker.jobQueue()
-                U.logD(f"{prefix} putting to queue, count={q.qsize()}...")
+                U.logD(f"{prefix} putting message job to queue, count={q.qsize()}...")
+
+                ## job type
+                jobType = "hells"
 
                 ## enqueue a job
                 promise: asyncio.Future[QueueJobResult] = asyncio.Future()
                 job: QueueJob = {
                     "createEpms": U.epochMs(),
                     "id": jobId,
-                    "randomNo": random.randint(1, 10),
-                    "message": f"hello-{jobId[-4:]}",
+                    "jobType": QueueJobType.MESSAGE,
+                    "jobData": {
+                        "tag": QueueJobType.MESSAGE,
+                        "randomNo": random.randint(1, 10),
+                        "message": f"{data}-{jobId[-4:]}",
+                    },
                     "promise": promise,
                 }
                 try:
