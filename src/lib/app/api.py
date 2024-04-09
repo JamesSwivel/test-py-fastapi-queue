@@ -44,7 +44,7 @@ async def initFastApi_():
         messageWorker = QueueWorker("messageWorker", messageWorkerStartedPromise, 10)
         messageWorker.start()
 
-        ## Start a pdf worker in separated thread
+        ## Start a pool of pdf workers, each running in its own thread
         PDF_WORKER_COUNT = 8
         pdfWorkerStartedPromises = [asyncio.Future() for i in range(PDF_WORKER_COUNT)]
         pdfWorkers = [QueueWorker(f"pdfWorker{i+1}", pdfWorkerStartedPromises[i], 20) for i in range(PDF_WORKER_COUNT)]
@@ -82,38 +82,37 @@ async def initFastApi_():
             prefix = f"{funcName}[{jobId}]"
             try:
 
-                ## check jobType
-                jobQueue: queue.Queue[QueueJob]
-                targetWorker: QueueWorker
+                ## Default job type is message if not specified
                 jobType: QueueJobType = QueueJobType.MESSAGE
+
+                ## Default time waiting for worker result
+                resultWaitSec = 5
+
+                ## Check jobType
+                jobQueue: queue.Queue[QueueJob]
+                worker: QueueWorker
                 if jobTypeStr == QueueJobType.MESSAGE:
                     jobType = QueueJobType.MESSAGE
                     jobQueue = messageWorker.jobQueue()
-                    targetWorker = messageWorker
+                    worker = messageWorker
+
+                ## In case of pdf2image, it has longer result wait time, e.g. 60sec
                 elif jobTypeStr == QueueJobType.PDF2IMAGE:
+                    resultWaitSec = 60
                     jobType = QueueJobType.PDF2IMAGE
 
-                    ## Get all current queue size of pdf workers
-                    ## NOTE: If there is running task, add 1 to the size since it is still running
-                    queueSizes = [
-                        pdfWorkers[i].jobQueue().qsize() + 1 if pdfWorkers[i].isRunningJob() else 0
-                        for i in range(PDF_WORKER_COUNT)
-                    ]
-
-                    ## Get the pdf job queue which has the smallest queue size
-                    queueIdxMinSize = queueSizes.index(min(queueSizes))
-                    targetWorker = pdfWorkers[queueIdxMinSize]
-                    jobQueue = targetWorker.jobQueue()
-
+                    ## Find out the worker who is the least busy
+                    worker = QueueWorker.leastBusyWorkers(pdfWorkers)
+                    jobQueue = worker.jobQueue()
                 else:
                     raise HTTPException(
                         status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"invalid job type={jobTypeStr}"
                     )
 
-                U.logD(f"{prefix} [{targetWorker.name()}] putting job to queue, count={jobQueue.qsize()}...")
+                U.logD(f"{prefix} [{worker.name()}] putting job to queue, count={jobQueue.qsize()}...")
 
                 ## This is result promise that will be awaited until worker completes the task
-                resultWaitSec = 5
+                ## NOTE: This promise will be passed to the target worker queue
                 resultPromise: asyncio.Future[QueueJobResult] = asyncio.Future()
 
                 ## Construct a message job
@@ -129,26 +128,27 @@ async def initFastApi_():
                         },
                         "promise": resultPromise,
                     }
-                    targetWorker = messageWorker
+                    worker = messageWorker
 
                 ## Construct a pdf2image job
                 elif jobType == QueueJobType.PDF2IMAGE:
-                    resultWaitSec = 60
                     job: QueueJob = {
                         "createEpms": U.epochMs(),
                         "id": jobId,
                         "jobType": jobType,
                         "jobData": {
                             "tag": jobType,
+                            ## This is the test pdf file, having 17 pages
                             "pdfFilePath": f"./data/regal-17pages.pdf",
                         },
                         "promise": resultPromise,
                     }
 
+                ## Enqueue the job to target worker queue
+                ## NOTE: if putting non-block (block=False), it will throw exception if queue is already full
                 try:
-                    ## if putting non-block (block=False), it will throw exception if queue is already full
                     jobQueue.put(job, block=False)
-                    U.logD(f"{prefix} [{targetWorker.name()}] job successfully submitted, count={jobQueue.qsize()}")
+                    U.logD(f"{prefix} [{worker.name()}] job successfully submitted, count={jobQueue.qsize()}")
                 except queue.Full:
                     raise HTTPException(
                         status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=f"Service unavailable (job queue full)"

@@ -1,17 +1,22 @@
 ## Overview
 A repo to demonstrate how to use Python to construct a FastAPI Server using advanced async and multi-threading approach.  There are a few highlights.
 - Construct the API endpoint in async function
-- The async API receives request payload and enqueue the item to a thread safe worker queue.
+- The async API receives request payload and enqueue the item to thread safe worker queues.
 - After job submission, it waits for the result using `await`, i.e. wait in async way.  
   Thus, the request will **NOT** block the main thread, which means new incoming requests will **NOT** be blocked.
-- A worker process, running in separated worker thread, and dequeue the job item and process it sequentially.
-- The worker processes the job like simulating a CPU intensive task that may run for a few seconds.  
-  Even though the worker may block self worker thread during the job processing, it will **NOT** block the main thread.
+- Each workers, running in separated worker thread, and dequeue the job item and process it sequentially.
+- Each worker processes the job like simulating a CPU intensive task that may run for a few seconds.  
+  Even though the worker may block itself during the job processing, it will **NOT** block the main thread and other worker threads.
 - Job item is a TypeDict that includes data payload and a `asyncio.Future` object similar to JavaScript `promise`.  When the worker finishes the job processing, it will notify the result to the original API who is awaiting for the result.  
 - If API finds the worker queue is already full, i.e. too many pending jobs, it may return HTTP status code `503 service unavailable`. 
   
 Use cases
-- This repo uses single worker.  However, multiple workers running in multiple threads can be implemented in similar way.  Also, there can be multiple worker queues that the jobs can be delivered to different workers.
+- This repo demonstrates how multiple workers that are able to work with incoming concurrent requests.  
+- There are two types of demo workers.
+  - The first one is called `messageWorker` and there is one worker thread for this type.  
+    This worker simulates CPU intensive task, either running for 3 or 10 seconds.
+  - The other type is called `pdfWorker` and there are 8 x worker threads, which means max 8 x concurrent CPU intensive task can run in parallel.  This worker simulates CPU intensive task that a [17-page pdf](./data/regal-17pages.pdf) are converted into png files.
+  > NOTE: each worker has its own job queue
 - The methodologies of this repo may be applied to some use case like `PaddleOCR` or `pdf-to-image` processing which are CPU intensive tasks by nature, but the processing should **NOT** block incoming http requests.
 
 HTTP status code

@@ -46,6 +46,25 @@ class QueueJobResult(TypedDict):
 class QueueWorker(threading.Thread):
     QUEUE_MAX_SIZE = 10
 
+    @classmethod
+    def leastBusyWorkers(cls, workers: List["QueueWorker"]) -> "QueueWorker":
+        funcName = cls.leastBusyWorkers.__name__
+        prefix = funcName
+        try:
+            ## Get current queue size of workers
+            ## NOTE: If there is running task in the worker, add 1 to the size since it is still running
+            queueSizes = [
+                workers[i].jobQueue().qsize() + 1 if workers[i].isRunningJob() else 0 for i in range(len(workers))
+            ]
+
+            ## Find out the work who has the smallest queue size
+            queueIdxMinSize = queueSizes.index(min(queueSizes))
+            targetWorker = workers[queueIdxMinSize]
+
+            return targetWorker
+        except Exception as e:
+            U.throwPrefix(prefix, e)
+
     ## limit the instance variable
     ## Why? avoid bugs some methods created wrong instance variable
     __slots__ = ("workerName_", "jobQueue_", "threadId_", "startedPromise_", "isWorkerStarted_", "isRunningJob_")
