@@ -37,6 +37,7 @@ class QueueJob(TypedDict):
 class QueueJobResult(TypedDict):
     errCode: str
     err: str
+    workerName: str
     data: str
     dequeueElapsedMs: int
     processElapsedMs: int
@@ -155,6 +156,7 @@ class QueueWorker(threading.Thread):
             "errCode": "",
             "err": "",
             "data": "",
+            "workerName": self.workerName_,
             "dequeueElapsedMs": 0,
             "processElapsedMs": 0,
             "totalElapsedMs": 0,
