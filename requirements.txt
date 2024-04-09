@@ -3,6 +3,9 @@
 ## $ pyenv install 3.11.8
 ## $ pyenv virtualenv 3.11.8 test-py-fastapi-queue
 ## $ pyenv activate test-py-fastapi-queue
+##
+## install packages
+## $ pip install -r requirements
 
 
 ## [all] is recommended since it also installs uvicorn and uvloop for faster web performance
