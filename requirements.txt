@@ -10,3 +10,6 @@
 
 ## [all] is recommended since it also installs uvicorn and uvloop for faster web performance
 fastapi[all]==0.110.1
+
+## Convert pdf to images
+pdf2image==1.17.0
