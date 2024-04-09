@@ -45,7 +45,7 @@ async def initFastApi_():
         messageWorker.start()
 
         ## Start a pdf worker in separated thread
-        PDF_WORKER_COUNT = 4
+        PDF_WORKER_COUNT = 8
         pdfWorkerStartedPromises = [asyncio.Future() for i in range(PDF_WORKER_COUNT)]
         pdfWorkers = [QueueWorker(f"pdfWorker{i+1}", pdfWorkerStartedPromises[i], 20) for i in range(PDF_WORKER_COUNT)]
         for i in range(PDF_WORKER_COUNT):
