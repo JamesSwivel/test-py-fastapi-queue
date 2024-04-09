@@ -40,6 +40,9 @@ About `async`/`await` and `asyncio.Future`
 ## Environment
 - Python `3.11.8`
 - `WSL/Ubuntu` 22.04.x or `Windows` 
+- Dependent utility - poppler
+  - For linux/Ubuntu, `sudo apt install -y poppler-utils`
+  - For Windows, (to be checked)
 - virtualenv using pyenv (Linux/Ubuntu)
   ```bash
   $ pyenv update
