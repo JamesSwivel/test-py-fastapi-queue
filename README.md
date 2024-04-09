@@ -21,8 +21,7 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
 
 ## Performance stats - single and multiple pdf workers
 - The test is performed
-  - Hardware config  
-    CPU: AMD Ryzen 9 7940HS / 32GB RAM / Average CPU Mark: 30524
+  - Hardware config: AMD Ryzen 9 7940HS / 32GB RAM / Average CPU Mark: 30524
   - no. of pdf workers = 8
   - pdf file: [17-page pdf](./data/regal-17pages.pdf)
   - output png dir: `./out/pdf2image/<uuid>/<image.NN>.png`
