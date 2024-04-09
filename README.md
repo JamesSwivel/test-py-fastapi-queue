@@ -57,7 +57,7 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
 - `WSL/Ubuntu` 22.04.x or `Windows` 
 - Dependent utility - poppler
   - For linux/Ubuntu, `sudo apt install -y poppler-utils`
-  - For Windows, (to be checked)
+  - For Windows, install the release page [here](https://github.com/oschwartz10612/poppler-windows/releases) from the repo [poppler-windows](https://github.com/oschwartz10612/poppler-windows) 
 - virtualenv using pyenv (Linux/Ubuntu)
   ```bash
   $ pyenv update
