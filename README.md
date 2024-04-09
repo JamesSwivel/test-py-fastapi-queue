@@ -66,9 +66,10 @@ A repo to demonstrate how to use Python to construct a FastAPI Server using adva
   $ pyenv activate test-py-fastapi-queue
   ```
 - virtualenv using py (Windows)
+  First, install python [3.11.8](https://www.python.org/downloads/release/python-3118/)
   ```bat
   > cd <projectDir>
-  > py -3.11.8 -m venv winEnv
+  > py -3.11 -m venv winEnv
   > winEnv\Scripts\activate
   ```
 - Install packages on virtualenv
