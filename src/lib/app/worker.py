@@ -228,6 +228,7 @@ class QueueWorker(threading.Thread):
                 time.sleep(3)
             jobResult["data"] = f"message job finished ({U.epochMs()})"
         except Exception as e:
+            U.logPrefixE(prefix, e)
             U.throwPrefix(prefix, e)
 
     def onJobPdf2image(self, jobResult: QueueJobResult, job: QueueJob, jobData: QueueJobPdf2Image):
