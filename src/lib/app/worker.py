@@ -5,7 +5,7 @@ import queue
 import os
 from queue import Queue
 from enum import Enum
-from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, Optional, Literal, NotRequired
+from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, Optional, Literal, NotRequired, Tuple
 import pdf2image
 import util as U
 
@@ -46,7 +46,7 @@ class QueueJobResult(TypedDict):
 
 class QueueWorkerOpts(TypedDict):
     queueMaxSize: NotRequired[int]
-    queue: NotRequired[queue.Queue]
+    queue: NotRequired[Optional[queue.Queue]]
 
 
 class QueueWorker(threading.Thread):
@@ -57,15 +57,30 @@ class QueueWorker(threading.Thread):
         funcName = cls.leastBusyWorkers.__name__
         prefix = funcName
         try:
-            ## Get current queue size of workers
+            ## Since multiple workers may share a queue, first build this info
+            queues: Dict[queue.Queue, List["QueueWorker"]] = {}
+            for worker in workers:
+                workerQueue = worker.jobQueue()
+                if not (workerQueue in queues):
+                    queues[workerQueue] = [worker]
+                else:
+                    queues[workerQueue].append(worker)
+
+            ## debug
+            isDebug = True
+            if isDebug:
+                U.logD(
+                    f"{prefix} unique queues={len(queues)}, workers={[ [ w.name() for w in queues[q]]  for q in queues  ]}"
+                )
+
+            ## Get size of unique queues
             ## NOTE: If there is running task in the worker, add 1 to the size since it is still running
-            queueSizes = [
-                workers[i].jobQueue().qsize() + 1 if workers[i].isRunningJob() else 0 for i in range(len(workers))
-            ]
+            queueSizes = [q.qsize() + sum([1 if w.isRunningJob() else 0 for w in queues[q]]) for q in queues]
 
             ## Find out the work who has the smallest queue size
             queueIdxMinSize = queueSizes.index(min(queueSizes))
-            targetWorker = workers[queueIdxMinSize]
+            queueMinSize = list(queues.keys())[queueIdxMinSize]
+            targetWorker = queues[queueMinSize][0]
 
             return targetWorker
         except Exception as e:
@@ -75,19 +90,25 @@ class QueueWorker(threading.Thread):
     ## Why? avoid bugs some methods created wrong instance variable
     __slots__ = ("workerName_", "jobQueue_", "threadId_", "startedPromise_", "isWorkerStarted_", "isRunningJob_")
 
-    def __init__(self, workerName: str, startedPromise: asyncio.Future[bool], opts: Optional[QueueWorkerOpts]):
+    def __init__(self, workerName: str, startedPromise: asyncio.Future[bool], optsIn: Optional[QueueWorkerOpts]):
         funcName = f"{QueueWorker.__name__}.ctor"
         prefix = funcName
         try:
-            U.logD(f"{prefix}")
+            # U.logD(f"{prefix}")
 
             ## build default options
             queueMaxSize = (
-                opts["queueMaxSize"] if opts is not None and "queueMaxSize" in opts else QueueWorker.QUEUE_MAX_SIZE
+                optsIn["queueMaxSize"]
+                if optsIn is not None and "queueMaxSize" in optsIn
+                else QueueWorker.QUEUE_MAX_SIZE
             )
             opts = {
                 "queueMaxSize": queueMaxSize,
-                "queue": (opts["queue"] if opts is not None and "queue" in opts else Queue(maxsize=queueMaxSize)),
+                "queue": (
+                    optsIn["queue"]
+                    if optsIn is not None and "queue" in optsIn and optsIn["queue"] is not None
+                    else Queue(maxsize=queueMaxSize)
+                ),
             }
 
             ## must call base class ctor
@@ -100,9 +121,8 @@ class QueueWorker(threading.Thread):
             ## create job queue
             self.jobQueue_: Queue[QueueJob] = opts["queue"]
 
-            ## get thread id
-            threadId = threading.current_thread().ident
-            self.threadId_: int = threadId if threadId is not None else 0
+            ## get thread id (not yet assigned until it is started)
+            self.threadId_: int = 0
         except Exception as e:
             U.throwPrefix(prefix, e)
 
@@ -128,8 +148,10 @@ class QueueWorker(threading.Thread):
         return self.jobQueue_.maxsize
 
     def worker_(self):
+        self.threadId_ = self.ident if self.ident is not None else 0
+
         funcName = self.worker_.__name__
-        prefix = f"{self.workerName_}[{self.threadId_}]"
+        prefix = f"{funcName}[{self.threadId_}]"
 
         ## notify worker is started
         if not self.isWorkerStarted_:

@@ -40,15 +40,30 @@ async def initFastApi_():
         api = FastAPI()
 
         ## Start a message worker in separated thread
+        MESSAGE_WORKER_MAX_QSIZE = 10
         messageWorkerStartedPromise: asyncio.Future[bool] = asyncio.Future()
-        messageWorker = QueueWorker("messageWorker", messageWorkerStartedPromise, {"queueMaxSize": 10})
+        messageWorker = QueueWorker(
+            "messageWorker", messageWorkerStartedPromise, {"queueMaxSize": MESSAGE_WORKER_MAX_QSIZE}
+        )
         messageWorker.start()
 
         ## Start a pool of pdf workers, each running in its own thread
+        PDF_WORKER_MAX_QSIZE = 10
         PDF_WORKER_COUNT = 8
+        IS_PDF_WORKER_SINGLE_QUEUE = True
+        if IS_PDF_WORKER_SINGLE_QUEUE:
+            U.logW(f"Use single queue for pdf worker!")
+            pdfWorkerSingleQueue = queue.Queue()
         pdfWorkerStartedPromises = [asyncio.Future() for i in range(PDF_WORKER_COUNT)]
         pdfWorkers = [
-            QueueWorker(f"pdfWorker{i+1}", pdfWorkerStartedPromises[i], {"queueMaxSize": 10})
+            QueueWorker(
+                f"pdfWorker{i+1}",
+                pdfWorkerStartedPromises[i],
+                {
+                    "queueMaxSize": PDF_WORKER_MAX_QSIZE,
+                    "queue": pdfWorkerSingleQueue if IS_PDF_WORKER_SINGLE_QUEUE else None,
+                },
+            )
             for i in range(PDF_WORKER_COUNT)
         ]
         for i in range(PDF_WORKER_COUNT):
@@ -93,26 +108,24 @@ async def initFastApi_():
 
                 ## Check jobType
                 jobQueue: queue.Queue[QueueJob]
-                worker: QueueWorker
                 if jobTypeStr == QueueJobType.MESSAGE:
                     jobType = QueueJobType.MESSAGE
                     jobQueue = messageWorker.jobQueue()
-                    worker = messageWorker
 
                 ## In case of pdf2image, it has longer result wait time, e.g. 60sec
                 elif jobTypeStr == QueueJobType.PDF2IMAGE:
                     resultWaitSec = 60
                     jobType = QueueJobType.PDF2IMAGE
 
-                    ## Find out the worker who is the least busy
-                    worker = QueueWorker.leastBusyWorkers(pdfWorkers)
-                    jobQueue = worker.jobQueue()
+                    ## Find out queue that it is least busy from the workers
+                    ## NOTE: queue can be shared by multiple workers
+                    jobQueue = QueueWorker.leastBusyWorkers(pdfWorkers).jobQueue()
                 else:
                     raise HTTPException(
                         status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"invalid job type={jobTypeStr}"
                     )
 
-                U.logD(f"{prefix} [{worker.name()}] putting job to queue, count={jobQueue.qsize()}...")
+                U.logD(f"{prefix} putting job to queue, count={jobQueue.qsize()}...")
 
                 ## This is result promise that will be awaited until worker completes the task
                 ## NOTE: This promise will be passed to the target worker queue
@@ -131,7 +144,6 @@ async def initFastApi_():
                         },
                         "promise": resultPromise,
                     }
-                    worker = messageWorker
 
                 ## Construct a pdf2image job
                 elif jobType == QueueJobType.PDF2IMAGE:
@@ -151,7 +163,7 @@ async def initFastApi_():
                 ## NOTE: if putting non-block (block=False), it will throw exception if queue is already full
                 try:
                     jobQueue.put(job, block=False)
-                    U.logD(f"{prefix} [{worker.name()}] job successfully submitted, count={jobQueue.qsize()}")
+                    U.logD(f"{prefix} job successfully submitted, count={jobQueue.qsize()}")
                 except queue.Full:
                     raise HTTPException(
                         status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=f"Service unavailable (job queue full)"
@@ -162,7 +174,7 @@ async def initFastApi_():
                     result = await resultPromise
 
                 ## display result
-                U.logD(f"{prefix} result[{jobId}]={result}")
+                U.logD(f"{prefix} result={result}")
 
                 ## In case of error result
                 if result["errCode"] != "":
