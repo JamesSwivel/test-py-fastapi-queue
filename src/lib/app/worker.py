@@ -5,7 +5,7 @@ import queue
 import os
 from queue import Queue
 from enum import Enum
-from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, Optional, Literal
+from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, Optional, Literal, NotRequired
 import pdf2image
 import util as U
 
@@ -44,6 +44,11 @@ class QueueJobResult(TypedDict):
     totalElapsedMs: int
 
 
+class QueueWorkerOpts(TypedDict):
+    queueMaxSize: NotRequired[int]
+    queue: NotRequired[queue.Queue]
+
+
 class QueueWorker(threading.Thread):
     QUEUE_MAX_SIZE = 10
 
@@ -70,11 +75,20 @@ class QueueWorker(threading.Thread):
     ## Why? avoid bugs some methods created wrong instance variable
     __slots__ = ("workerName_", "jobQueue_", "threadId_", "startedPromise_", "isWorkerStarted_", "isRunningJob_")
 
-    def __init__(self, workerName: str, startedPromise: asyncio.Future[bool], maxSize=QUEUE_MAX_SIZE):
+    def __init__(self, workerName: str, startedPromise: asyncio.Future[bool], opts: Optional[QueueWorkerOpts]):
         funcName = f"{QueueWorker.__name__}.ctor"
         prefix = funcName
         try:
             U.logD(f"{prefix}")
+
+            ## build default options
+            queueMaxSize = (
+                opts["queueMaxSize"] if opts is not None and "queueMaxSize" in opts else QueueWorker.QUEUE_MAX_SIZE
+            )
+            opts = {
+                "queueMaxSize": queueMaxSize,
+                "queue": (opts["queue"] if opts is not None and "queue" in opts else Queue(maxsize=queueMaxSize)),
+            }
 
             ## must call base class ctor
             super().__init__()
@@ -84,7 +98,7 @@ class QueueWorker(threading.Thread):
             self.startedPromise_ = startedPromise
 
             ## create job queue
-            self.jobQueue_: Queue[QueueJob] = Queue(maxsize=maxSize)
+            self.jobQueue_: Queue[QueueJob] = opts["queue"]
 
             ## get thread id
             threadId = threading.current_thread().ident
