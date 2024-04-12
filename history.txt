@@ -1,0 +1,11 @@
+[ Bug fix ]
+- Thread id is not correct and is found same for all worker
+  Reason: thread id should be obtained after the thread is run, not in ctor
+
+[ New ]
+- Multiple pdf workers can share a single queue.  
+  Try to test if the performance is the same as multiple workers which each one has its own queue
+  Result: same performance
+
+[ Improvement ]
+- Nil
