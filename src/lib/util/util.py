@@ -1,6 +1,6 @@
 import sys
 import time
-from uuid import uuid4
+import uuid as PyUuid_
 from typing import Union, Dict, TypedDict
 
 
@@ -36,4 +36,4 @@ def epochSec():
 
 
 def uuid():
-    return str(uuid4())
+    return str(PyUuid_.uuid4())
