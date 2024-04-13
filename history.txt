@@ -1,10 +1,16 @@
-2024-04-13 SAT
+===================================================================
+2024-04-13 SAT PM
 
 [ Bug fix ]
 - Nil
 
 [ New ]
-- api.py
+- Reallocate of files for better structure
+  src/lib/api               All endpoints definition and utility functions
+  src/lib/api/worker        Multi-threading/Multi-processing workers
+  src/app                   Factory class FastApiServer to init fastAPI 
+
+- src/lib/uploadFile.py
   Added a new endpoint to handle multipart/form-data POST request
   refer to function: async def uploadFiles(formData: UploadFormData = Depends()):
 - testApi.http
