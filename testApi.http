@@ -24,14 +24,15 @@ Accept: application/json
 
 {"data":"not hello"}
 
-### (post) message job
-POST {{HostAddress}}/put
+### multi-thread message job
+POST {{HostAddress}}/multiThread
 Accept: application/json
 
 {"data":"hello xdata team"}
 
-### (post) pdf job
-POST {{HostAddress}}/put
+
+### multi-thread pdf2image job
+POST {{HostAddress}}/multiThread
 Accept: application/json
 
 {"data":"hello xdata team", "jobType": "pdf2image"}
