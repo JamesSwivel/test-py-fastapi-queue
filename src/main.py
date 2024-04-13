@@ -2,6 +2,7 @@
 
 import sys
 import os
+import asyncio
 from typing import Union, Callable, TypeVar, List, TypedDict, Dict, Any, NamedTuple
 
 from fastapi import FastAPI
@@ -30,11 +31,12 @@ if len(sysDirsToAppend) == 0:
 ## import self-developed modules/packages
 ########################################################
 import util as U
-from app import api
+from app import FastApiServer
 
 
 def main():
-    uvicorn.run(api, host="0.0.0.0", port=8000)
+    fastApiServer = asyncio.run(FastApiServer.initServer())
+    uvicorn.run(fastApiServer, host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":
