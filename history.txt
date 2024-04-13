@@ -14,8 +14,13 @@
   Added a new endpoint to handle multipart/form-data POST request
   refer to function: async def uploadFiles(formData: UploadFormData = Depends()):
 - testApi.http
-  Added an example of POST method using multipart/form-data encoding
-  The example includes key/value pairs and upload files
+  - POST {{HostAddress}}/uploadFiles
+    An example of POST method using multipart/form-data encoding
+    The example includes key/value pairs and upload files
+  - POST {{HostAddress}}/multiProcess
+    An example that trigger multi-processing of pdf2image worker.
+    This add 4 jobs that 4 x pdf2image jobs are running in parallel
+    Result: No noticeable improvement that multi-processing has better performance than multi-threading
 
 [ Improvement ]
 - Nil
