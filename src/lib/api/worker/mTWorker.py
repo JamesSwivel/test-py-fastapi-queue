@@ -151,7 +151,7 @@ class MultiThreadQueueWorker(threading.Thread):
         self.threadId_ = self.ident if self.ident is not None else 0
 
         funcName = self.worker_.__name__
-        prefix = f"{funcName}[{self.threadId_}]"
+        prefix = f"{self.workerName_}[{self.threadId_}]"
 
         ## notify worker is started
         if not self.isWorkerStarted_:

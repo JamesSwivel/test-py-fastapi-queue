@@ -31,11 +31,18 @@ Accept: application/json
 {"data":"hello xdata team"}
 
 
+
 ### multi-thread pdf2image job
 POST {{HostAddress}}/multiThread
 Accept: application/json
 
 {"data":"hello xdata team", "jobType": "pdf2image"}
+
+### multi-process pdf2image
+POST {{HostAddress}}/multiProcess
+Accept: application/json
+
+{"data":"hello xdata team"}
 
 ### (post) upload files and key/value pairs
 POST {{HostAddress}}/uploadFiles

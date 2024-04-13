@@ -38,7 +38,7 @@ def initAllEndpoints(app: FastAPI):
         from .uploadFile import initEndpoints
 
         initEndpoints(app)
-        from .multiThread import initEndpoints
+        from .multi import initEndpoints
 
         initEndpoints(app)
     except Exception as e:

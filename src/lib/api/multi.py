@@ -8,10 +8,21 @@ import util as U
 from app import FastApiServer
 from .util import throwHttpPrefix
 from .worker.mTWorker import MultiThreadQueueWorker, QueueJob, QueueJobResult, QueueJobType
+from api.worker import MultiThreadQueueWorker, MultiProcessManager
 
 
 def initEndpoints(app: FastAPI):
     U.logD(f"{initEndpoints.__name__}[{__file__.split('/')[-1]}] loading...")
+
+    isMultiProcessEnable = True
+    mpManager: MultiProcessManager
+    if isMultiProcessEnable:
+        ## start multi processes
+        mpManager = MultiProcessManager("mp-mgr")
+        mpManager.startProcess("pdf2image-1")
+        mpManager.startProcess("pdf2image-2")
+        mpManager.startProcess("pdf2image-3")
+        mpManager.startProcess("pdf2image-4")
 
     @app.post("/multiThread")
     async def multiThread(
@@ -107,3 +118,16 @@ def initEndpoints(app: FastAPI):
 
         except Exception as e:
             throwHttpPrefix(prefix, jobId, e)
+
+    @app.post("/multiProcess")
+    async def multiProcess(data: str = Body(..., embed=True)):
+        funcName = multiThread.__name__
+        prefix = f"{funcName}"
+        try:
+            mpManager.jobQueue().put(True)
+            mpManager.jobQueue().put(True)
+            mpManager.jobQueue().put(True)
+            mpManager.jobQueue().put(True)
+
+        except Exception as e:
+            throwHttpPrefix(prefix, "xxx", e)
