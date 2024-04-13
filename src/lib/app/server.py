@@ -1,0 +1,68 @@
+import os
+import asyncio
+import queue
+from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depends
+from pydantic import BaseModel
+from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, NoReturn, Annotated
+
+import util as U
+from api.worker import QueueWorker
+from api import initAllEndpoints
+
+
+class FastApiServer:
+    MESSAGE_WORKER_MAX_QSIZE = 10
+    PDF_WORKER_MAX_QSIZE = 10
+    PDF_WORKER_COUNT = 8
+    IS_PDF_WORKER_SINGLE_QUEUE = True
+
+    app: FastAPI
+    messageWorkers: QueueWorker
+    pdfWorkers: List[QueueWorker]
+
+    @classmethod
+    async def initServer(cls):
+        funcName = cls.initServer.__name__
+        prefix = funcName
+        try:
+            ## Create a FastAPI instance
+            cls.app = FastAPI()
+
+            ## Start a message worker in separated thread
+            messageWorkerStartPromise = asyncio.Future()
+            cls.messageWorker = QueueWorker(
+                "messageWorker", messageWorkerStartPromise, {"queueMaxSize": cls.MESSAGE_WORKER_MAX_QSIZE}
+            )
+            cls.messageWorker.start()
+
+            ## Start a pool of pdf workers, each running in its own thread
+            if cls.IS_PDF_WORKER_SINGLE_QUEUE:
+                U.logW(f"Use single queue for pdf worker!")
+                pdfWorkerSingleQueue = queue.Queue()
+            pdfWorkerStartPromises = [asyncio.Future() for i in range(cls.PDF_WORKER_COUNT)]
+            cls.pdfWorkers = [
+                QueueWorker(
+                    f"pdfWorker{i+1}",
+                    pdfWorkerStartPromises[i],
+                    {
+                        "queueMaxSize": cls.PDF_WORKER_MAX_QSIZE,
+                        "queue": pdfWorkerSingleQueue if cls.IS_PDF_WORKER_SINGLE_QUEUE else None,
+                    },
+                )
+                for i in range(cls.PDF_WORKER_COUNT)
+            ]
+            for i in range(cls.PDF_WORKER_COUNT):
+                cls.pdfWorkers[i].start()
+
+            ## await until workers are running
+            await messageWorkerStartPromise
+            for i in range(cls.PDF_WORKER_COUNT):
+                await pdfWorkerStartPromises[i]
+
+            ## init all endpoints
+            initAllEndpoints(cls.app)
+
+            ## FastAPI instance is returned
+            return cls.app
+        except Exception as e:
+            U.throwPrefix(prefix, e)
