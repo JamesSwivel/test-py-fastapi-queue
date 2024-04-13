@@ -7,7 +7,7 @@ from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depend
 import util as U
 from app import FastApiServer
 from .util import throwHttpPrefix
-from .worker.mTWorker import QueueWorker, QueueJob, QueueJobResult, QueueJobType
+from .worker.mTWorker import MultiThreadQueueWorker, QueueJob, QueueJobResult, QueueJobType
 
 
 def initEndpoints(app: FastAPI):
@@ -42,7 +42,7 @@ def initEndpoints(app: FastAPI):
 
                 ## Find out queue that it is least busy from the workers
                 ## NOTE: queue can be shared by multiple workers
-                jobQueue = QueueWorker.leastBusyWorkers(FastApiServer.pdfWorkers).jobQueue()
+                jobQueue = MultiThreadQueueWorker.leastBusyWorkers(FastApiServer.pdfWorkers).jobQueue()
             else:
                 raise HTTPException(
                     status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail=f"invalid job type={jobTypeStr}"

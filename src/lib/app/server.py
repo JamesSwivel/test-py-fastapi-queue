@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, NoReturn, Annotated
 
 import util as U
-from api.worker import QueueWorker
+from api.worker import MultiThreadQueueWorker
 from api import initAllEndpoints
 
 
@@ -17,8 +17,8 @@ class FastApiServer:
     IS_PDF_WORKER_SINGLE_QUEUE = True
 
     app: FastAPI
-    messageWorkers: QueueWorker
-    pdfWorkers: List[QueueWorker]
+    messageWorkers: MultiThreadQueueWorker
+    pdfWorkers: List[MultiThreadQueueWorker]
 
     @classmethod
     async def initServer(cls):
@@ -30,7 +30,7 @@ class FastApiServer:
 
             ## Start a message worker in separated thread
             messageWorkerStartPromise = asyncio.Future()
-            cls.messageWorker = QueueWorker(
+            cls.messageWorker = MultiThreadQueueWorker(
                 "messageWorker", messageWorkerStartPromise, {"queueMaxSize": cls.MESSAGE_WORKER_MAX_QSIZE}
             )
             cls.messageWorker.start()
@@ -41,7 +41,7 @@ class FastApiServer:
                 pdfWorkerSingleQueue = queue.Queue()
             pdfWorkerStartPromises = [asyncio.Future() for i in range(cls.PDF_WORKER_COUNT)]
             cls.pdfWorkers = [
-                QueueWorker(
+                MultiThreadQueueWorker(
                     f"pdfWorker{i+1}",
                     pdfWorkerStartPromises[i],
                     {
