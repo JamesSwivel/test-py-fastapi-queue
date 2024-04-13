@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, NoReturn, Annotated
 
 import util as U
-from api.worker import MultiThreadQueueWorker
+from api.worker import MultiThreadQueueWorker, MultiProcessManager
 from api import initAllEndpoints
 
 
@@ -17,7 +17,7 @@ class FastApiServer:
     IS_PDF_WORKER_SINGLE_QUEUE = True
 
     app: FastAPI
-    messageWorkers: MultiThreadQueueWorker
+    messageWorker: MultiThreadQueueWorker
     pdfWorkers: List[MultiThreadQueueWorker]
 
     @classmethod
