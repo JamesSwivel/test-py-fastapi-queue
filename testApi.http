@@ -35,3 +35,30 @@ POST {{HostAddress}}/put
 Accept: application/json
 
 {"data":"hello xdata team", "jobType": "pdf2image"}
+
+### (post) upload files and key/value pairs
+POST {{HostAddress}}/uploadFiles
+Accept: application/json
+Content-Type: multipart/form-data; boundary=MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5
+
+--MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5
+Content-Disposition: form-data; name="data"
+
+This is value of field[data] hello world!
+--MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5
+Content-Disposition: form-data; name="message"
+
+This is value of field[message] Say hello to Tom and Edwood : >
+--MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5
+Content-Disposition: form-data; name="files"; filename="test.pdf"
+Content-Type: application/octet-stream
+
+< data/regal-17pages.pdf
+--MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5
+Content-Disposition: form-data; name="files"; filename="test-file-2.pdf"
+Content-Type: application/octet-stream
+
+< data/regal-17pages.pdf
+--MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5--
+
+
