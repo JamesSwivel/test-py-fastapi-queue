@@ -1,3 +1,20 @@
+2024-04-13 SAT
+
+[ Bug fix ]
+- Nil
+
+[ New ]
+- api.py
+  Added a new endpoint to handle multipart/form-data POST request
+  refer to function: async def uploadFiles(formData: UploadFormData = Depends()):
+- testApi.http
+  Added an example of POST method using multipart/form-data encoding
+  The example includes key/value pairs and upload files
+
+[ Improvement ]
+- Nil
+
+===================================================================
 [ Bug fix ]
 - Thread id is not correct and is found same for all worker
   Reason: thread id should be obtained after the thread is run, not in ctor
