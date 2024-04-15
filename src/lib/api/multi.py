@@ -124,9 +124,7 @@ def initEndpoints(app: FastAPI):
         funcName = multiThread.__name__
         prefix = f"{funcName}"
         try:
-            mpManager.jobQueue().put(True)
-            mpManager.jobQueue().put(True)
-            mpManager.jobQueue().put(True)
+            ## Submit one job to multi-process pdf2image workers
             mpManager.jobQueue().put(True)
 
         except Exception as e:
