@@ -19,6 +19,7 @@ class FastApiServer:
     app: FastAPI
     messageWorker: MultiThreadQueueWorker
     pdfWorkers: List[MultiThreadQueueWorker]
+    mpManager: MultiProcessManager
 
     @classmethod
     async def initServer(cls):
@@ -58,6 +59,11 @@ class FastApiServer:
             await messageWorkerStartPromise
             for i in range(cls.PDF_WORKER_COUNT):
                 await pdfWorkerStartPromises[i]
+
+            ## Start a pool of multi-process pdf2image workers
+            cls.mpManager = MultiProcessManager("mpMgr")
+            for i in range(8):
+                cls.mpManager.startProcess(f"pdfWorker{i+1}")
 
             ## init all endpoints
             initAllEndpoints(cls.app)

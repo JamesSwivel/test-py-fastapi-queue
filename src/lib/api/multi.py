@@ -7,22 +7,11 @@ from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depend
 import util as U
 from app import FastApiServer
 from .util import throwHttpPrefix
-from .worker.mTWorker import MultiThreadQueueWorker, QueueJob, QueueJobResult, QueueJobType
-from api.worker import MultiThreadQueueWorker, MultiProcessManager
+from api.worker import MultiThreadQueueWorker, MpQueueJob, QueueJob, QueueJobResult, QueueJobType
 
 
 def initEndpoints(app: FastAPI):
     U.logD(f"{initEndpoints.__name__}[{__file__.split('/')[-1]}] loading...")
-
-    isMultiProcessEnable = True
-    mpManager: MultiProcessManager
-    if isMultiProcessEnable:
-        ## start multi processes
-        mpManager = MultiProcessManager("mp-mgr")
-        mpManager.startProcess("pdf2image-1")
-        mpManager.startProcess("pdf2image-2")
-        mpManager.startProcess("pdf2image-3")
-        mpManager.startProcess("pdf2image-4")
 
     @app.post("/multiThread")
     async def multiThread(
@@ -125,7 +114,46 @@ def initEndpoints(app: FastAPI):
         prefix = f"{funcName}"
         try:
             ## Submit one job to multi-process pdf2image workers
-            mpManager.jobQueue().put(True)
+            mpManager = FastApiServer.mpManager
+
+            ## This is result promise that will be awaited until worker completes the task
+            ## NOTE: This promise will be passed to the target worker queue
+            resultPromise: asyncio.Future[QueueJobResult] = asyncio.Future()
+
+            resultWaitSec = 30
+            jobId = U.uuid()
+            job: QueueJob = {
+                "createEpms": U.epochMs(),
+                "id": jobId,
+                "jobType": QueueJobType.PDF2IMAGE,
+                "jobData": {
+                    "tag": QueueJobType.PDF2IMAGE,
+                    ## This is the test pdf file, having 17 pages
+                    "pdfFilePath": f"./data/regal-17pages.pdf",
+                },
+                "promise": resultPromise,
+            }
+
+            try:
+                mpManager.enqueue(job)
+                U.logD(f"{prefix} job successfully submitted, jobId={job['id']}")
+            except queue.Full:
+                raise HTTPException(
+                    status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=f"Service unavailable (job queue full)"
+                )
+
+            ## await for result from worker
+            async with asyncio.timeout(resultWaitSec):
+                result = await resultPromise
+
+            ## display result
+            U.logD(f"{prefix} result={result}")
+
+            ## In case of error result
+            if result["errCode"] != "":
+                raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=f"{result['err']}")
+
+            return {"data": {"id": jobId, "result": result}}
 
         except Exception as e:
             throwHttpPrefix(prefix, "xxx", e)
