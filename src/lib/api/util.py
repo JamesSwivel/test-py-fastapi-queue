@@ -44,6 +44,6 @@ def initAllEndpoints(app: FastAPI):
 
         from .dynamicPayload import initEndpoints
 
-        initAllEndpoints(app)
+        initEndpoints(app)
     except Exception as e:
         U.throwPrefix(prefix, e)

@@ -70,3 +70,32 @@ Content-Type: application/octet-stream
 --MyBoundary5d73155dbfd0c9661cc0a1cb7c2058a5--
 
 
+
+### (post) payloadSimple
+POST {{HostAddress}}/payloadSimple
+Accept: application/json
+
+{"id": "5d907f4e-81e9-426d-b7e4-d03965465d94", "messages": ["hello", "world"]}
+
+### (post) payloadOptional - "extra" can be null|str, "extra2" can be missing 
+POST {{HostAddress}}/payloadOptional
+Accept: application/json
+
+{"value": 1, "messages": ["hello", "world"], "extra":"extra data here!"}
+
+### (post) payloadOptional - "extra" can be null|str, "extra2" can be missing 
+POST {{HostAddress}}/payloadOptional
+Accept: application/json
+
+{"value": 1, "messages": ["hello", "world"], "extra":null, "extra2": "yes"}
+
+
+### (post) payloadFull - nested payload
+POST {{HostAddress}}/payloadFull
+Accept: application/json
+
+{
+  "header": {"id": "5d907f4e-81e9-426d-b7e4-d03965465d94", "messages": ["hello", "world"]},
+  "data":  {"value": 1, "messages": ["hello", "world"], "extra":null, "extra2": "yes"}
+}
+
