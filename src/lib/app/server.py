@@ -1,7 +1,10 @@
+import sys
 import os
 import asyncio
 import queue
+import signal
 from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depends
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, NoReturn, Annotated
 
@@ -26,8 +29,28 @@ class FastApiServer:
         funcName = cls.initServer.__name__
         prefix = funcName
         try:
+
+            @asynccontextmanager
+            async def lifespan_(application: FastAPI):
+
+                def onSignal_(signalNumber, frame):
+                    U.logW(f"{prefix} SIGNAL received, exiting app...")
+                    mTWorkers = [cls.messageWorker] + [p for p in cls.pdfWorkers]
+                    for w in mTWorkers:
+                        w.stop()
+                    for w in mTWorkers:
+                        w.join()
+                    U.logW(f"{prefix} all multi-thread workers stopped")
+                    U.logW(f"{prefix} exiting system...")
+                    sys.exit()
+
+                signal.signal(signal.SIGINT, onSignal_)
+                U.logD(f"{prefix} lifespan.start")
+                yield
+                U.logD(f"{prefix} lifespan.shutdown")
+
             ## Create a FastAPI instance
-            cls.app = FastAPI()
+            cls.app = FastAPI(lifespan=lifespan_)
 
             ## Start a message worker in separated thread
             messageWorkerStartPromise = asyncio.Future()
@@ -61,9 +84,9 @@ class FastApiServer:
                 await pdfWorkerStartPromises[i]
 
             ## Start a pool of multi-process pdf2image workers
-            cls.mpManager = MultiProcessManager("mpMgr")
-            for i in range(8):
-                cls.mpManager.startProcess(f"pdfWorker{i+1}")
+            # cls.mpManager = MultiProcessManager("mpMgr")
+            # for i in range(8):
+            #     cls.mpManager.startProcess(f"pdfWorker{i+1}")
 
             ## init all endpoints
             initAllEndpoints(cls.app)
