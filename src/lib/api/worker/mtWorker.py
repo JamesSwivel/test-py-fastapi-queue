@@ -56,7 +56,15 @@ class MultiThreadQueueWorker(threading.Thread):
 
     ## limit the instance variable
     ## Why? avoid bugs some methods created wrong instance variable
-    __slots__ = ("workerName_", "jobQueue_", "threadId_", "startedPromise_", "isWorkerStarted_", "isRunningJob_")
+    __slots__ = (
+        "workerName_",
+        "jobQueue_",
+        "threadId_",
+        "startedPromise_",
+        "isWorkerStarted_",
+        "isRunningJob_",
+        "isRequestedToStop_",
+    )
 
     def __init__(self, workerName: str, startedPromise: asyncio.Future[bool], optsIn: Optional[QueueWorkerOpts]):
         funcName = f"{MultiThreadQueueWorker.__name__}.ctor"
@@ -91,6 +99,11 @@ class MultiThreadQueueWorker(threading.Thread):
 
             ## get thread id (not yet assigned until it is started)
             self.threadId_: int = 0
+
+            ## Setting daemon to true so that when main thread exits, all worker threads exit too
+            self.setDaemon(True)
+            self.isRequestedToStop_ = False
+
         except Exception as e:
             U.throwPrefix(prefix, e)
 
@@ -99,6 +112,9 @@ class MultiThreadQueueWorker(threading.Thread):
 
     def run(self):
         self.worker_()
+
+    def stop(self):
+        self.isRequestedToStop_ = True
 
     def jobQueue(self):
         return self.jobQueue_
@@ -130,6 +146,11 @@ class MultiThreadQueueWorker(threading.Thread):
         lastAliveEpms = U.epochMs()
         while True:
             try:
+                ## requested to stop
+                if self.isRequestedToStop_:
+                    U.logW(f"{prefix} requested to stop...")
+                    break
+
                 self.isRunningJob_ = False
                 nowEpms = U.epochMs()
 
@@ -140,7 +161,7 @@ class MultiThreadQueueWorker(threading.Thread):
 
                 try:
                     ## Get the job item from the queue
-                    job = self.jobQueue_.get(timeout=5)
+                    job = self.jobQueue_.get(timeout=2)
                 except queue.Empty:
                     # U.logD(f"queue is empty")
 
