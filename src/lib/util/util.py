@@ -37,3 +37,33 @@ def epochSec():
 
 def uuid():
     return str(PyUuid_.uuid4())
+
+
+def isUuid(s: str) -> bool:
+    """
+    UUid?
+      e.g. lex=36
+                1         2         3
+      012345678901234567890123456789012345
+      d33c425f-64c0-4d50-afe4-6eb5739a056b
+    """
+    if len(s) != 36:
+        return False
+    ## check presence of "-"
+    for idx in [8, 13, 18, 23]:
+        if s[idx] != "-":
+            return False
+
+    ## must be 5 segments
+    splits = s.split("-")
+    if len(splits) != 5:
+        return False
+
+    ## when joined, it must be hex str
+    return isHexStr("".join(splits))
+
+
+def isHexStr(s: str) -> bool:
+    if len(s) % 2 != 0:
+        return False
+    return all(c in "01234567890abcdef" for c in s)
