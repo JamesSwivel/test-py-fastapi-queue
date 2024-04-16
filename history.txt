@@ -1,4 +1,26 @@
 ===================================================================
+2024-04-16 TUE PM
+
+[ Bug fix ]
+- Nil
+
+[ New ]
+- Reallocate of files for better structure
+  src/lib/api               All endpoints definition and utility functions
+  src/lib/api/worker        Multi-threading/Multi-processing workers
+  src/app                   Factory class FastApiServer to init fastAPI 
+
+- src/lib/api/dynamicPayload.py
+  Added a new endpoint to demonstrate the use BaseModel and validator
+- testApi.http
+  - POST {{HostAddress}}/payloadSimple
+    An example to demo payload with uuid validator
+  - POST {{HostAddress}}/payloadOptional
+    An example to demo payload with validator and optional field, i.e. missing field
+  - POST {{HostAddress}}/payloadFull
+    An example to demo nested/multi-level payload structure with validators
+
+===================================================================
 2024-04-13 SAT PM
 
 [ Bug fix ]
