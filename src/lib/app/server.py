@@ -93,9 +93,9 @@ class FastApiServer:
                 await pdfWorkerStartPromises[i]
 
             ## Start a pool of multi-process pdf2image workers
-            # cls.mpManager = MultiProcessManager("mpMgr")
-            # for i in range(8):
-            #     cls.mpManager.startProcess(f"pdfWorker{i+1}")
+            cls.mpManager = MultiProcessManager("mpMgr")
+            for i in range(8):
+                cls.mpManager.startProcess(f"pdfWorker{i+1}")
 
             ## init all endpoints
             initAllEndpoints(cls.app)

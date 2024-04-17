@@ -1,3 +1,4 @@
+import time
 import os
 import asyncio
 import queue
@@ -53,6 +54,11 @@ class MultiProcessManager:
             self.resultPromises_: Dict[str, asyncio.Future["QueueJobResult"]] = {}
             self.resultPromisesLock_ = threading.Lock()
             self.resultThread_: threading.Thread = threading.Thread(target=self.resultQueueThreadWorker_)
+
+            ## Important note:
+            ## - Setting daemon to True so that when main thread exits, all worker threads exit too
+            ## - By default, it is False.  When main thread exits, running threads will prevent the program from exiting.
+            self.resultThread_.setDaemon(True)
             self.resultThread_.start()
 
             ## All processes info
@@ -131,27 +137,44 @@ class MultiProcessManager:
 
     def startProcess(self, workerName: str):
         funcName = self.startProcess.__name__
-        prefix = funcName
+        prefix = f"{funcName}[{workerName}]"
         try:
             if workerName in self.processes_:
                 raise Exception(f"processes[{workerName}] already exist")
-            worker = MultiProcessWorker(self, workerName, self.jobQueue_, self.resultQueue_)
-            workerProcess = Process(target=worker.worker)
+            
+            ## Important note: refer to class note
+            worker = MultiProcessWorker(self.name, workerName, self.jobQueue_, self.resultQueue_)
+            workerProcess = Process(target=worker.mpWorker)
             self.processes_[workerName] = {"process": workerProcess}
+            
+            U.logD(f"{prefix} starting...")
             workerProcess.start()
         except Exception as e:
             U.throwPrefix(prefix, e)
 
 
+## Important note
+## 1. When using multiprocessing, Linux and Windows have different behavior.
+##    It is greatly due to the fact that Linux use fork and Windows uses spawn
+## 2. Linux "fork" copies the memory from parent and create a child process
+##    Windows "spawn" creates brand new child process 
+## 3. Due to the way Windows uses "spawn", it tries to pickle all properties to run the worker function.
+##    This is where many issues are seen
+## 4. In short, the target worker function to run as a separated process must have its properties picklable 
+##    For example: if there is asyncio.Future properties, it will crash since this property is not picklable 
+## 5. General practice of a multiprocessing worker
+##    - Use basic picklable properties
+##    - minimize dependency to other class
+##    - The worker can be a instance method (good practice indeed)
 class MultiProcessWorker:
 
     ## limit the instance variable
     ## Why? avoid bugs some methods created wrong instance variable
-    __slots__ = ("workerName_", "mpMgr_", "pid", "jobQueue_", "resultQueue_", "prefix_", "isRunningJob_")
+    __slots__ = ("workerName", "mpMgrName", "pid", "jobQueue_", "resultQueue_", "prefix_", "isRunningJob_")
 
     def __init__(
         self,
-        mpMgr: MultiProcessManager,
+        mpMgrName: str,
         workerName: str,
         jobQueue: multiprocessing.Queue,
         resultQueue: multiprocessing.Queue,
@@ -159,17 +182,17 @@ class MultiProcessWorker:
         funcName = f"{MultiProcessWorker.__name__}.ctor"
         prefix = funcName
         try:
-            self.mpMgr_ = mpMgr
-            self.workerName_ = workerName
+            self.mpMgrName = mpMgrName
+            self.workerName = workerName
             self.pid = os.getpid()
             self.jobQueue_: multiprocessing.Queue[MpQueueJob] = jobQueue
             self.resultQueue_: multiprocessing.Queue[Tuple[str, QueueJobResult]] = resultQueue
-            self.prefix_ = f"mp[{mpMgr.name}][{workerName}]"
+            self.prefix_ = f"mp[{self.mpMgrName}][{workerName}]"
         except Exception as e:
             U.throwPrefix(prefix, e)
 
-    def worker(self):
-        funcName = self.worker.__name__
+    def mpWorker(self):
+        funcName = self.mpWorker.__name__
         prefix = f"{self.prefix_}[{os.getpid()}]"
         try:
             U.logD(f"{prefix} running...")
@@ -205,7 +228,7 @@ class MultiProcessWorker:
             "errCode": "",
             "err": "",
             "data": "",
-            "workerName": self.workerName_,
+            "workerName": self.workerName,
             "dequeueElapsedMs": 0,
             "processElapsedMs": 0,
             "totalElapsedMs": 0,

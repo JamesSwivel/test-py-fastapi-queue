@@ -1,3 +1,4 @@
+import platform
 import sys
 import time
 import uuid as PyUuid_
@@ -67,3 +68,13 @@ def isHexStr(s: str) -> bool:
     if len(s) % 2 != 0:
         return False
     return all(c in "01234567890abcdef" for c in s)
+
+
+def isLinux() -> bool:
+    return platform.system() == "Linux"
+
+def isWindows() -> bool:
+    return platform.system() == "Windows"
+
+def platformName() -> str:
+    return platform.system()
