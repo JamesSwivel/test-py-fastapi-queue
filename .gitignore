@@ -9,6 +9,3 @@ ipynb_checkpoints/
 ## Just in case, some nodejs tools are used, ignore node_modules
 node_modules/
 
-/winEnv/
-/winENv/
-/winEnv/
