@@ -36,9 +36,8 @@ class FastApiServer:
                 w.join()
             U.logW(f"{prefix} all multi-thread workers stopped")
         except Exception as e:
-            U.logPrefixE(prefix,e)
+            U.logPrefixE(prefix, e)
 
-    
     @classmethod
     @asynccontextmanager
     async def fastApiLifeSpan(cls, application: FastAPI):
@@ -49,8 +48,15 @@ class FastApiServer:
             yield
             U.logW(f"{prefix} >>>>>>> onShutdown")
             cls.stopAllThreadWorkers()
+
+            ## important note:
+            ## https://github.com/simonw/datasette-scale-to-zero/issues/2
+            ## - normal exit causes a lot of strange error messages
+            ## - sys.exit(0) also has the same issue
+            ## - calling os._exit(0) will ignore the error messages since it will NOT call handlers on exit
+            os._exit(0)
         except Exception as e:
-            U.logPrefixE(prefix,e)
+            U.logPrefixE(prefix, e)
 
     @classmethod
     async def initServer(cls):
