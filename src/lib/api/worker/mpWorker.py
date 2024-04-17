@@ -158,8 +158,9 @@ class MultiProcessManager:
         prefix = funcName
         try:
             for pName, p in self.processes_.items():
-                U.logW(f"{prefix} stopping multi-process Worker[{pName}]...")
-                p.terminate()
+                if p.is_alive():
+                    U.logW(f"{prefix} stopping multi-process Worker[{pName}]...")
+                    p.terminate()
             for _, p in self.processes_.items():
                 p.join()
             U.logW(f"{prefix} all multi-process Workers stopped")
