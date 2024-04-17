@@ -35,8 +35,13 @@ from app import FastApiServer
 
 
 def main():
-    fastApiServer = asyncio.run(FastApiServer.initServer())
-    uvicorn.run(fastApiServer, host="0.0.0.0", port=8000)
+    funcName = main.__name__
+    prefix = funcName
+    try:
+        fastApiServer = asyncio.run(FastApiServer.initServer())
+        uvicorn.run(fastApiServer, host="0.0.0.0", port=8000)
+    except Exception as e:
+        U.logPrefixE(prefix, e)
 
 
 if __name__ == "__main__":
