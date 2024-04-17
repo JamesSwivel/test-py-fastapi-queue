@@ -100,7 +100,9 @@ class MultiThreadQueueWorker(threading.Thread):
             ## get thread id (not yet assigned until it is started)
             self.threadId_: int = 0
 
-            ## Setting daemon to true so that when main thread exits, all worker threads exit too
+            ## Important note:
+            ## - Setting daemon to True so that when main thread exits, all worker threads exit too
+            ## - By default, it is False.  When main thread exits, running threads will prevent the program from exiting.
             self.setDaemon(True)
             self.isRequestedToStop_ = False
 

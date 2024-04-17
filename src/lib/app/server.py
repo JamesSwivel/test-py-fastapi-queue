@@ -25,32 +25,41 @@ class FastApiServer:
     mpManager: MultiProcessManager
 
     @classmethod
+    def stopAllThreadWorkers(cls):
+        funcName = cls.stopAllThreadWorkers.__name__
+        prefix = funcName
+        try:
+            mTWorkers = [cls.messageWorker] + [p for p in cls.pdfWorkers]
+            for w in mTWorkers:
+                w.stop()
+            for w in mTWorkers:
+                w.join()
+            U.logW(f"{prefix} all multi-thread workers stopped")
+        except Exception as e:
+            U.logPrefixE(prefix,e)
+
+    
+    @classmethod
+    @asynccontextmanager
+    async def fastApiLifeSpan(cls, application: FastAPI):
+        funcName = cls.fastApiLifeSpan.__name__
+        prefix = funcName
+        try:
+            U.logW(f"{prefix} onStart")
+            yield
+            U.logW(f"{prefix} onShutdown")
+            cls.stopAllThreadWorkers()
+        except Exception as e:
+            U.logPrefixE(prefix,e)
+
+    @classmethod
     async def initServer(cls):
         funcName = cls.initServer.__name__
         prefix = funcName
         try:
 
-            @asynccontextmanager
-            async def lifespan_(application: FastAPI):
-
-                def onSignal_(signalNumber, frame):
-                    U.logW(f"{prefix} SIGNAL received, exiting app...")
-                    mTWorkers = [cls.messageWorker] + [p for p in cls.pdfWorkers]
-                    for w in mTWorkers:
-                        w.stop()
-                    for w in mTWorkers:
-                        w.join()
-                    U.logW(f"{prefix} all multi-thread workers stopped")
-                    U.logW(f"{prefix} exiting system...")
-                    sys.exit()
-
-                signal.signal(signal.SIGINT, onSignal_)
-                U.logD(f"{prefix} lifespan.start")
-                yield
-                U.logD(f"{prefix} lifespan.shutdown")
-
             ## Create a FastAPI instance
-            cls.app = FastAPI(lifespan=lifespan_)
+            cls.app = FastAPI(lifespan=cls.fastApiLifeSpan)
 
             ## Start a message worker in separated thread
             messageWorkerStartPromise = asyncio.Future()
