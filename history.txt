@@ -1,4 +1,19 @@
 ===================================================================
+2024-04-17 TUE WED
+
+[ Bug fix ]
+- Fix multiprocessing crash running on Windows
+  Root cause: some properties are not able to pickle 
+- Fix CTRL-C cannot completely kill the program
+  Root cause: all thread workers must run in daemon mode
+
+[ New ]
+- nil
+
+[ Improvement ]
+- Nil
+
+===================================================================
 2024-04-16 TUE PM
 
 [ Bug fix ]
