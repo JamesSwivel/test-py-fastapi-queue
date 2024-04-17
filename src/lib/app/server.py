@@ -45,9 +45,9 @@ class FastApiServer:
         funcName = cls.fastApiLifeSpan.__name__
         prefix = funcName
         try:
-            U.logW(f"{prefix} onStart")
+            U.logW(f"{prefix} >>>>>>> onStart")
             yield
-            U.logW(f"{prefix} onShutdown")
+            U.logW(f"{prefix} >>>>>>> onShutdown")
             cls.stopAllThreadWorkers()
         except Exception as e:
             U.logPrefixE(prefix,e)
