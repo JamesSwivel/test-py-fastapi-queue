@@ -9,7 +9,7 @@ from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, 
 import pdf2image
 
 import util as U
-from .types import MpQueueJob, QueueJob, QueueJobMessage, QueueJobPdf2Image, QueueJobResult, QueueJobType
+from .types import MpQueueJob, QueueJob, QueueEventType, QueueJobPdf2Image, QueueJobResult, QueueJobType, QueueJobEvent
 
 
 class MPQueueJobResult(TypedDict):
@@ -153,10 +153,28 @@ class MultiProcessManager:
         except Exception as e:
             U.throwPrefix(prefix, e)
 
-    def stopAllProcesses(self):
+    async def stopAllProcesses(self):
         funcName = self.stopAllProcesses.__name__
         prefix = funcName
         try:
+            # for idx in range(len(self.processes_)):
+            #     resultPromise: asyncio.Future[QueueJobResult] = asyncio.Future()
+            #     jobId = U.uuid()
+            #     job: QueueJob = {
+            #         "createEpms": U.epochMs(),
+            #         "id": jobId,
+            #         "jobType": QueueJobType.EVENT,
+            #         "jobData": {"tag": QueueJobType.EVENT, "action": QueueEventType.STOP},
+            #         "promise": resultPromise,
+            #     }
+
+            #     U.logW(f"{prefix} jwjwjw before enqueue, jobId={jobId}")
+            #     self.enqueue(job)
+
+            #     U.logW(f"{prefix} waiting worker to respond to stop request...")
+            #     await resultPromise
+            #     U.logW(f"{prefix} waiting worker done!")
+
             for pName, p in self.processes_.items():
                 if p.is_alive():
                     U.logW(f"{prefix} stopping multi-process Worker[{pName}]...")
@@ -185,7 +203,16 @@ class MultiProcessWorker:
 
     ## limit the instance variable
     ## Why? avoid bugs some methods created wrong instance variable
-    __slots__ = ("workerName", "mpMgrName", "pid", "jobQueue_", "resultQueue_", "prefix_", "isRunningJob_")
+    __slots__ = (
+        "workerName",
+        "mpMgrName",
+        "pid",
+        "jobQueue_",
+        "resultQueue_",
+        "prefix_",
+        "isRunningJob_",
+        "isRequestToStop_",
+    )
 
     def __init__(
         self,
@@ -203,6 +230,7 @@ class MultiProcessWorker:
             self.jobQueue_: multiprocessing.Queue[MpQueueJob] = jobQueue
             self.resultQueue_: multiprocessing.Queue[Tuple[str, QueueJobResult]] = resultQueue
             self.prefix_ = f"mp[{self.mpMgrName}][{workerName}]"
+            self.isRequestToStop_ = False
         except Exception as e:
             U.throwPrefix(prefix, e)
 
@@ -213,6 +241,11 @@ class MultiProcessWorker:
         lastAliveEpms = U.epochMs()
         while True:
             try:
+                ## requested to stop?
+                if self.isRequestToStop_:
+                    U.logW(f"{prefix} requested to stop...")
+                    break
+
                 nowEpms = U.epochMs()
 
                 ## Print alive message every 5mins
@@ -237,7 +270,6 @@ class MultiProcessWorker:
                 break
             except Exception as e:
                 U.logPrefixE(prefix, e)
-        U.logW(f"{prefix} exited")
 
     def onQueueJob_(self, job: MpQueueJob):
         funcName = self.onQueueJob_.__name__
@@ -266,9 +298,16 @@ class MultiProcessWorker:
             onProcessEpms = U.epochMs()
             jobType = job["jobType"]
 
+            ## queue event
+            if jobType == QueueJobType.EVENT and job["jobData"]["tag"] == QueueJobType.EVENT:
+                eventAction = job["jobData"]["action"]
+                if eventAction == QueueEventType.STOP:
+                    self.isRequestToStop_ = True
+
             ## Convert pdf to image
-            if jobType == QueueJobType.PDF2IMAGE and job["jobData"]["tag"] == QueueJobType.PDF2IMAGE:
+            elif jobType == QueueJobType.PDF2IMAGE and job["jobData"]["tag"] == QueueJobType.PDF2IMAGE:
                 self.onJobPdf2image(result, job, job["jobData"])
+
             else:
                 raise Exception(f"invalid jobType")
             onResultEpms = U.epochMs()
@@ -279,6 +318,8 @@ class MultiProcessWorker:
 
         ## In case of exception, fill in err/errcode to the result
         except Exception as e:
+            ## jwjwjw
+            U.logPrefixE(prefix, e)
             if resultPromiseId is not None:
                 result["errCode"] = "err"
                 result["err"] = "error processing job request"

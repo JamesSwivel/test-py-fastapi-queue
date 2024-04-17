@@ -4,8 +4,18 @@ from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, 
 
 
 class QueueJobType(str, Enum):
+    EVENT = "event"
     MESSAGE = "message"
     PDF2IMAGE = "pdf2image"
+
+
+class QueueEventType(str, Enum):
+    STOP = "stop"
+
+
+class QueueJobEvent(TypedDict):
+    tag: Literal[QueueJobType.EVENT]
+    action: QueueEventType
 
 
 class QueueJobMessage(TypedDict):
@@ -23,7 +33,7 @@ class QueueJob(TypedDict):
     createEpms: int
     id: str
     jobType: QueueJobType
-    jobData: Union[QueueJobMessage, QueueJobPdf2Image]
+    jobData: Union[QueueJobMessage, QueueJobPdf2Image, QueueJobEvent]
     promise: asyncio.Future["QueueJobResult"]
 
 
@@ -31,7 +41,7 @@ class MpQueueJob(TypedDict):
     createEpms: int
     id: str
     jobType: QueueJobType
-    jobData: Union[QueueJobMessage, QueueJobPdf2Image]
+    jobData: Union[QueueJobMessage, QueueJobPdf2Image, QueueJobEvent]
     ## An string id to represent a promise
     promise: str
 

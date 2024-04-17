@@ -40,11 +40,11 @@ class FastApiServer:
             U.logPrefixE(prefix, e)
 
     @classmethod
-    def stopAllProcessWorkers(cls):
+    async def stopAllProcessWorkers(cls):
         funcName = cls.stopAllProcessWorkers.__name__
         prefix = funcName
         try:
-            cls.mpManager.stopAllProcesses()
+            await cls.mpManager.stopAllProcesses()
         except Exception as e:
             U.logPrefixE(prefix, e)
 
@@ -57,7 +57,7 @@ class FastApiServer:
             U.logW(f"{prefix} >>>>>>> onStart")
             yield
             U.logW(f"{prefix} >>>>>>> onShutdown")
-            cls.stopAllProcessWorkers()
+            await cls.stopAllProcessWorkers()
             cls.stopAllThreadWorkers()
 
             ## important note:
