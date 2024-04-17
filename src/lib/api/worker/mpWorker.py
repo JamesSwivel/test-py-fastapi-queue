@@ -116,9 +116,9 @@ class MultiProcessManager:
     def resultQueueThreadWorker_(self):
         funcName = self.resultQueueThreadWorker_.__name__
         prefix = f"MpMgr[{self.name}][{funcName}]"
-        try:
-            U.logD(f"{prefix} running...")
-            while True:
+        U.logD(f"{prefix} running...")
+        while True:
+            try:
                 promiseId, result = self.resultQueue_.get()
                 U.logD(f"{prefix} promiseId={promiseId}, result={result}")
 
@@ -132,8 +132,11 @@ class MultiProcessManager:
                         U.logD(f"{prefix} job already done, promiseId={promiseId}")
                     del self.resultPromises_[promiseId]
 
-        except Exception as e:
-            U.logPrefixE(prefix, e)
+            except KeyboardInterrupt as e:
+                U.logW(f"{prefix} KeyboardInterrupt")
+                break
+            except Exception as e:
+                U.logPrefixE(prefix, e)
 
     def startProcess(self, workerName: str):
         funcName = self.startProcess.__name__
@@ -141,13 +144,11 @@ class MultiProcessManager:
         try:
             if workerName in self.processes_:
                 raise Exception(f"processes[{workerName}] already exist")
-            
+
             ## Important note: refer to class note
             worker = MultiProcessWorker(self.name, workerName, self.jobQueue_, self.resultQueue_)
             workerProcess = Process(target=worker.mpWorker)
             self.processes_[workerName] = {"process": workerProcess}
-            
-            U.logD(f"{prefix} starting...")
             workerProcess.start()
         except Exception as e:
             U.throwPrefix(prefix, e)
@@ -157,11 +158,11 @@ class MultiProcessManager:
 ## 1. When using multiprocessing, Linux and Windows have different behavior.
 ##    It is greatly due to the fact that Linux use fork and Windows uses spawn
 ## 2. Linux "fork" copies the memory from parent and create a child process
-##    Windows "spawn" creates brand new child process 
+##    Windows "spawn" creates brand new child process
 ## 3. Due to the way Windows uses "spawn", it tries to pickle all properties to run the worker function.
 ##    This is where many issues are seen
-## 4. In short, the target worker function to run as a separated process must have its properties picklable 
-##    For example: if there is asyncio.Future properties, it will crash since this property is not picklable 
+## 4. In short, the target worker function to run as a separated process must have its properties picklable
+##    For example: if there is asyncio.Future properties, it will crash since this property is not picklable
 ## 5. General practice of a multiprocessing worker
 ##    - Use basic picklable properties
 ##    - minimize dependency to other class
@@ -194,10 +195,10 @@ class MultiProcessWorker:
     def mpWorker(self):
         funcName = self.mpWorker.__name__
         prefix = f"{self.prefix_}[{os.getpid()}]"
-        try:
-            U.logD(f"{prefix} running...")
-            lastAliveEpms = U.epochMs()
-            while True:
+        U.logD(f"{prefix} running...")
+        lastAliveEpms = U.epochMs()
+        while True:
+            try:
                 nowEpms = U.epochMs()
 
                 ## Print alive message every 5mins
@@ -217,9 +218,11 @@ class MultiProcessWorker:
                 ## process the queue job
                 self.onQueueJob_(job)
 
-                continue
-        except Exception as e:
-            U.throwPrefix(prefix, e)
+            except KeyboardInterrupt as e:
+                U.logW(f"{prefix} KeyboardInterrupt")
+                break
+            except Exception as e:
+                U.logPrefixE(prefix, e)
 
     def onQueueJob_(self, job: MpQueueJob):
         funcName = self.onQueueJob_.__name__

@@ -173,6 +173,9 @@ class MultiThreadQueueWorker(threading.Thread):
                 ## process the queue job
                 self.onQueueJob_(job)
 
+            except KeyboardInterrupt as e:
+                U.logW(f"{prefix} KeyboardInterrupt")
+                break
             except Exception as e:
                 U.logPrefixE(prefix, e)
 
