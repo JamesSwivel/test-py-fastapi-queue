@@ -57,7 +57,7 @@ def initEndpoints(app: FastAPI):
     U.logD(f"{initEndpoints.__name__}[{__file__.split('/')[-1]}] loading...")
 
     @app.post("/payloadSimple")
-    async def payloadSimple(data: PayloadHeader = Body(...)):
+    async def payloadSimple(data: PayloadHeader):
         funcName = payloadSimple.__name__
         prefix = funcName
         try:
@@ -66,7 +66,7 @@ def initEndpoints(app: FastAPI):
             U.logPrefixE(prefix, e)
 
     @app.post("/payloadOptional")
-    async def payloadOptional(data: PayloadBody = Body(...)):
+    async def payloadOptional(data: PayloadBody):
         funcName = payloadOptional.__name__
         prefix = funcName
         try:
@@ -75,7 +75,7 @@ def initEndpoints(app: FastAPI):
             U.logPrefixE(prefix, e)
 
     @app.post("/payloadFull")
-    async def payloadFull(data: PayloadHeaderBody = Body(...)):
+    async def payloadFull(data: PayloadHeaderBody):
         funcName = payloadFull.__name__
         prefix = funcName
         try:
