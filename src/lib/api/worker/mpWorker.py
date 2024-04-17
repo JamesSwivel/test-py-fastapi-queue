@@ -237,6 +237,7 @@ class MultiProcessWorker:
                 break
             except Exception as e:
                 U.logPrefixE(prefix, e)
+        U.logW(f"{prefix} exited")
 
     def onQueueJob_(self, job: MpQueueJob):
         funcName = self.onQueueJob_.__name__
