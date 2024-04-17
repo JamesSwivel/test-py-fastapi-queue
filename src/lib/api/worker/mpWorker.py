@@ -65,7 +65,7 @@ class MultiProcessManager:
             class MultiProcessWorker(TypedDict):
                 process: Process
 
-            self.processes_: Dict[str, MultiProcessWorker] = {}
+            self.processes_: Dict[str, Process] = {}
 
         except Exception as e:
             U.throwPrefix(prefix, e)
@@ -147,9 +147,22 @@ class MultiProcessManager:
 
             ## Important note: refer to class note
             worker = MultiProcessWorker(self.name, workerName, self.jobQueue_, self.resultQueue_)
-            workerProcess = Process(target=worker.mpWorker)
-            self.processes_[workerName] = {"process": workerProcess}
+            workerProcess = Process(target=worker.mpWorker, daemon=True)
+            self.processes_[workerName] = workerProcess
             workerProcess.start()
+        except Exception as e:
+            U.throwPrefix(prefix, e)
+
+    def stopAllProcesses(self):
+        funcName = self.stopAllProcesses.__name__
+        prefix = funcName
+        try:
+            for pName, p in self.processes_.items():
+                U.logW(f"{prefix} stopping multi-process Worker[{pName}]...")
+                p.terminate()
+            for _, p in self.processes_.items():
+                p.join()
+            U.logW(f"{prefix} all multi-process Workers stopped")
         except Exception as e:
             U.throwPrefix(prefix, e)
 

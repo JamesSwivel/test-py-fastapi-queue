@@ -29,12 +29,22 @@ class FastApiServer:
         funcName = cls.stopAllThreadWorkers.__name__
         prefix = funcName
         try:
+            U.logW(f"{prefix} stopping all multi-thread Workers...")
             mTWorkers = [cls.messageWorker] + [p for p in cls.pdfWorkers]
             for w in mTWorkers:
                 w.stop()
             for w in mTWorkers:
                 w.join()
             U.logW(f"{prefix} all multi-thread workers stopped")
+        except Exception as e:
+            U.logPrefixE(prefix, e)
+
+    @classmethod
+    def stopAllProcessWorkers(cls):
+        funcName = cls.stopAllProcessWorkers.__name__
+        prefix = funcName
+        try:
+            cls.mpManager.stopAllProcesses()
         except Exception as e:
             U.logPrefixE(prefix, e)
 
@@ -47,6 +57,7 @@ class FastApiServer:
             U.logW(f"{prefix} >>>>>>> onStart")
             yield
             U.logW(f"{prefix} >>>>>>> onShutdown")
+            cls.stopAllProcessWorkers()
             cls.stopAllThreadWorkers()
 
             ## important note:
