@@ -43,9 +43,8 @@ def parseFilePath(filePath: str):
     _, ext = os.path.splitext(filePath)
 
     ## get basename without ext
-    ## e.g. aaa.bbb.ext -> aaa.bbb
-    tokens = baseName.split(".")[0:-1]
-    baseNameNoExt = ".".join(tokens)
+    ## e.g. aaa.bbb.ext -> aaa.bbb, aaa.mp4 -> aaa, bbb -> bbb
+    baseNameNoExt = baseName[0:len(baseName)- len(ext)]
 
     out: TReturns_parseFilePath = {"baseDir": baseDir, "baseName": baseName, "ext": ext, "baseNameNoExt": baseNameNoExt}
     return out
@@ -62,23 +61,23 @@ def replaceFileExt(f: str, newExt: str):
     Returns:
         e.g. /aa/bb/cc/xx.jpg -> /aa/bb/cc/xx.mp4
     """
-    baseNameWithDir, ext = os.path.splitext(f)
+    baseNameWithDir, _ = os.path.splitext(f)
     newFilename = f"{baseNameWithDir}{newExt}"
     return newFilename
 
 
-@overload
-def chCwd(dirPath: str):
-    """
-    change CWD
-    """
+# @overload
+# def chCwd(dirPath: str):
+#     """
+#     change CWD
+#     """
 
 
-@overload
-def chCwd(dirPath: str, isThrow: bool) -> NoReturn:
-    """
-    Change CWD. Throw if error
-    """
+# @overload
+# def chCwd(dirPath: str, isThrow: bool) -> NoReturn:
+#     """
+#     Change CWD. Throw if error
+#     """
 
 
 def chCwd(dirPath: str, isThrow: bool = False):
@@ -107,19 +106,19 @@ def chCwd(dirPath: str, isThrow: bool = False):
     return isOk
 
 
-@overload
-def chCwdFromFilePath(filePath: str):
-    """
-    change CWD given a filePath, e.g. script main filePath
-    """
+# @overload
+# def chCwdFromFilePath(filePath: str):
+#     """
+#     change CWD given a filePath, e.g. script main filePath
+#     """
 
 
-@overload
-def chCwdFromFilePath(filePath: str, isThrow: bool) -> NoReturn:
-    """
-    change CWD given a filePath, e.g. script main filePath.
-    Throw exception if error
-    """
+# @overload
+# def chCwdFromFilePath(filePath: str, isThrow: bool) -> NoReturn:
+#     """
+#     change CWD given a filePath, e.g. script main filePath.
+#     Throw exception if error
+#     """
 
 
 def chCwdFromFilePath(filePath: str, isThrow: bool = False):
