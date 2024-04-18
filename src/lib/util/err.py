@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union, Dict, TypedDict, overload, Optional, Any
+from typing import Union, Dict, overload, Optional, Any, TypedDict
 
 
 class SWErrCode(Enum):
@@ -76,7 +76,7 @@ class SWErr(Exception):
         """
         self._errCode: SWErrCode = SWErrCode.E_Err
         self._err = ""
-        self._extra = {}
+        self._extra: Dict = {}
         self.setError(arg1, arg2)
 
     def errCode(self) -> SWErrCode:
@@ -97,7 +97,16 @@ class SWErr(Exception):
     def isError(self):
         return self._errCode != SWErrCode.E_NotErr
 
-    def setExtra(self, extra: Union[TypedDict, Dict]):
+    def setExtra(self, extra: Dict):
+        '''
+        Set extra info 
+
+        Args:
+            extra: 
+                - it is a dict.  However, defining function arg as TypedDict is not allowed
+                - If a TypedDict instance is passed, it needs to cast, e.g. err.setExtra(cast(Obj, dict))
+                - To get the extra as the desired TypedDict, it needs to cast as well, value=cast(TypeObj, err.extra())
+        '''
         self._extra = extra
 
     @overload
