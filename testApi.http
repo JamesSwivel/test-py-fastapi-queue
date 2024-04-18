@@ -24,6 +24,12 @@ Accept: application/json
 
 {"data":"not hello"}
 
+### pdf2image (not multi-thread)
+POST {{HostAddress}}/pdf2image
+Accept: application/json
+
+{"data":"hello xdata team"}
+
 ### multi-thread message job
 POST {{HostAddress}}/multiThread
 Accept: application/json
