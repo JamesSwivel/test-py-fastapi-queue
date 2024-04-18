@@ -6,7 +6,11 @@ import util as U
 
 
 ## A helper function to raise HTTPException
-def throwHttpPrefix(prefix: str, id: str, e: Union[Exception, str]) -> NoReturn:
+def throwHttpPrefix(prefix: str, e: Union[Exception, str], id: str = "") -> NoReturn:
+    ## empty id -> "--"
+    if id == "":
+        id = "--"
+
     ## default is 500 internal server error
     httpStatusCode = HTTPStatus.INTERNAL_SERVER_ERROR
     httpErr = f"[{id}] internal server error"

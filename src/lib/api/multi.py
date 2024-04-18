@@ -106,12 +106,13 @@ def initEndpoints(app: FastAPI):
             return {"data": {"id": jobId, "result": result}}
 
         except Exception as e:
-            throwHttpPrefix(prefix, jobId, e)
+            throwHttpPrefix(prefix, e, jobId)
 
     @app.post("/multiProcess")
     async def multiProcess(data: str = Body(..., embed=True)):
         funcName = multiThread.__name__
         prefix = f"{funcName}"
+        jobId = U.uuid()
         try:
             ## Submit one job to multi-process pdf2image workers
             mpManager = FastApiServer.mpManager
@@ -121,7 +122,6 @@ def initEndpoints(app: FastAPI):
             resultPromise: asyncio.Future[QueueJobResult] = asyncio.Future()
 
             resultWaitSec = 30
-            jobId = U.uuid()
             job: QueueJob = {
                 "createEpms": U.epochMs(),
                 "id": jobId,
@@ -156,4 +156,4 @@ def initEndpoints(app: FastAPI):
             return {"data": {"id": jobId, "result": result}}
 
         except Exception as e:
-            throwHttpPrefix(prefix, "xxx", e)
+            throwHttpPrefix(prefix, e, jobId)

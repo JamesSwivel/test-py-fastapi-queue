@@ -87,4 +87,4 @@ def initEndpoints(app: FastAPI):
                 }
             }
         except Exception as e:
-            throwHttpPrefix(prefix, jobId, e)
+            throwHttpPrefix(prefix, e, jobId)
