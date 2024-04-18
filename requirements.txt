@@ -17,3 +17,7 @@ fastapi[all]==0.110.1
 ## - To install poppler in Ubuntu, sudo apt install -y poppler-utils
 pdf2image==1.17.0
 
+## Time based OTP RFC 6238 (time step is 30 seconds)
+## https://pyauth.github.io/pyotp/#time-based-otps
+pyotp==2.9.0
+
