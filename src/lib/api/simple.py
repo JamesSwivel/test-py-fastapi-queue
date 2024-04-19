@@ -1,13 +1,13 @@
 import os
 from typing import Optional
-from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depends
+from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depends, Request
+from fastapi.exceptions import ResponseValidationError
 from pydantic import BaseModel, Field, validator
 import pdf2image
 
 import util as U
-from .util import throwHttpPrefix
+from util.fastApi import throwHttpPrefix
 from .worker.types import QueueJobResult
-
 
 class SimpleRes(BaseModel):
     data: str
@@ -35,16 +35,25 @@ def onJobPdf2image(jobId: str, jobResult: QueueJobResult):
 def initEndpoints(app: FastAPI):
     U.logD(f"{initEndpoints.__name__}[{__file__.split('/')[-1]}] loading...")
 
+
     @app.get("/hello", response_model=SimpleRes)
     @app.post("/hello", response_model=SimpleRes)
     async def hello(data: str = Body(..., embed=True)):
         funcName = hello.__name__
         prefix = funcName
         try:
-            res = {"data2": f"received data={data}!", "password": "secret"}
+            res = {"data": f"received data={data}!", "password": "secret"}
             return res
         except Exception as e:
             throwHttpPrefix(prefix, e)
+
+    @app.post("/helloNoExceptionHandling", response_model=SimpleRes)
+    async def helloNoExceptionHandling(data: str = Body(..., embed=True)):
+        if data == "throw":
+            raise Exception(f"requested to throw exception")
+        res = {"data": f"received data={data}!", "password": "secret"}
+        return res
+
 
     @app.post("/getInfo", response_model=SimpleRes)
     async def get_info(data: str = Body(..., embed=True)):

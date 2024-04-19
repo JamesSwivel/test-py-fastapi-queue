@@ -6,7 +6,7 @@ from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depend
 
 import util as U
 from app import FastApiServer
-from .util import throwHttpPrefix
+from util.fastApi import throwHttpPrefix
 from api.worker import MultiThreadQueueWorker, MpQueueJob, QueueJob, QueueJobResult, QueueJobType
 
 

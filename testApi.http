@@ -12,6 +12,12 @@ Accept: application/json
 
 {"data":"hello"}
 
+### helloNoExceptionHandling (post)
+POST {{HostAddress}}/helloNoExceptionHandling
+Accept: application/json
+
+{"data":"throw"}
+
 ### getInfo (post)
 POST {{HostAddress}}/getInfo
 Accept: application/json

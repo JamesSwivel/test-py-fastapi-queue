@@ -5,7 +5,7 @@ from typing import Final, Union, Callable, TypeVar, List, TypedDict, Dict, Any, 
 from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depends
 
 import util as U
-from .util import throwHttpPrefix
+from util.fastApi import throwHttpPrefix
 
 
 def initEndpoints(app: FastAPI):

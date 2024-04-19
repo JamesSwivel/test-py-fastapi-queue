@@ -1,1 +1,1 @@
-from .util import *
+from .allApi import initAllEndpoints
