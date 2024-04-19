@@ -1,52 +1,47 @@
 {
-    "cSpell.words": [
-        "asyncio",
-        "Epms",
-        "fastapi",
-        "getpid",
-        "humao",
-        "jwjwjw",
-        "poppler",
-        "pydantic",
-        "pyenv",
-        "pylance",
-        "Ryzen",
-        "strerror",
-        "userpw",
-        "uvicorn",
-        "uvloop",
-        "venv",
-        "virtualenv"
-    ],
-    // python file uses black formatter
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
-    },
-    //   "python.formatting.blackArgs": ["--line-length", "120"],
-    // black formatter args
-    "black-formatter.args": [
-        "--line-length",
-        "120"
-    ],
-    // Python/Pylance or linter configurations
-    // pylance: specify python version under a virtualenv
-    "python.defaultInterpreterPath": "${env:HOME}/.pyenv/versions/3.11.8/envs/test-py-fastapi-queue/bin/python3",
-    "python.analysis.typeCheckingMode": "basic",
-    // pylance: extra paths for import resolution
-    "python.analysis.extraPaths": [
-        "./src/lib"
-    ],
-    // plyance: exclude paths
-    "python.analysis.exclude": [
-        "./out"
-    ],
-    // auto format
-    "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    // terminal settings
-    "terminal.integrated.enableMultiLinePasteWarning": "always",
-    "rest-client.previewResponseInUntitledDocument": false,
-    "rest-client.environmentVariables": {
-        "$shared": {}
-    }
+  "cSpell.words": [
+    "ASGI",
+    "asyncio",
+    "Epms",
+    "fastapi",
+    "getpid",
+    "humao",
+    "jwjwjw",
+    "poppler",
+    "pydantic",
+    "pyenv",
+    "pylance",
+    "Ryzen",
+    "starlette",
+    "strerror",
+    "userpw",
+    "uvicorn",
+    "uvloop",
+    "venv",
+    "virtualenv"
+  ],
+  // python file uses black formatter
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  //   "python.formatting.blackArgs": ["--line-length", "120"],
+  // black formatter args
+  "black-formatter.args": ["--line-length", "120"],
+  // Python/Pylance or linter configurations
+  // pylance: specify python version under a virtualenv
+  "python.defaultInterpreterPath": "${env:HOME}/.pyenv/versions/3.11.8/envs/test-py-fastapi-queue/bin/python3",
+  "python.analysis.typeCheckingMode": "basic",
+  // pylance: extra paths for import resolution
+  "python.analysis.extraPaths": ["./src/lib"],
+  // plyance: exclude paths
+  "python.analysis.exclude": ["./out"],
+  // auto format
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  // terminal settings
+  "terminal.integrated.enableMultiLinePasteWarning": "always",
+  "rest-client.previewResponseInUntitledDocument": false,
+  "rest-client.environmentVariables": {
+    "$shared": {}
+  }
 }
