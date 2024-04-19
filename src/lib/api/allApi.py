@@ -9,19 +9,15 @@ def initAllEndpoints(app: FastAPI):
 
         ## init and use global exception error handler
         useExceptionHandlerMiddleware(app)
-
         from .simple import initEndpoints
-
         initEndpoints(app)
         from .uploadFile import initEndpoints
-
         initEndpoints(app)
         from .multi import initEndpoints
-
         initEndpoints(app)
-
         from .dynamicPayload import initEndpoints
-
+        initEndpoints(app)
+        from .nestedPayload import initEndpoints
         initEndpoints(app)
     except Exception as e:
         U.throwPrefix(prefix, e)

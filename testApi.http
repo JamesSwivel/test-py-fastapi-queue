@@ -102,7 +102,7 @@ Accept: application/json
 {"value": 1, "messages": ["hello", "world"], "extra":null, "extra2": "yes"}
 
 
-### (post) payloadFull - nested payload
+### (post) payloadFull - fiill payload
 POST {{HostAddress}}/payloadFull
 Accept: application/json
 
@@ -111,3 +111,48 @@ Accept: application/json
   "data":  {"value": 1, "messages": ["hello", "world"], "extra":null, "extra2": "yes"}
 }
 
+
+### (post) nestedPayload
+POST {{HostAddress}}/nestedPayload
+Accept: application/json
+
+{
+  "name": "Swivel Software Limited",
+  "extra1": null,
+  "departments": {
+    "IT": {
+      "name": "IT Department",
+      "region": "HKSTP",
+      "persons": [
+        {
+          "name": "Ken Chan",
+          "age": 30,
+          "address": {
+            "street": "18W HKSTP Road",
+            "postalCode": "HKG"
+          }
+        },
+        {
+          "name": "Sylvia Law",
+          "age": 21,
+          "address": {
+            "street": "HKU road",
+            "postalCode": null
+          }
+        }
+
+      ]
+    }, 
+    "HR": {
+      "name": "HR Department",
+      "region": "KWun Tong APM",
+      "persons": []
+    }
+  }
+}
+
+### POST validateNestedPayload
+POST {{HostAddress}}/validateNestedPayload
+Accept: application/json
+
+{}

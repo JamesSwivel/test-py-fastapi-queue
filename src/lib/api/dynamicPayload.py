@@ -16,6 +16,7 @@ from fastapi import FastAPI, Body, HTTPException, File, UploadFile, Form, Depend
 from pydantic import BaseModel, Field, validator
 
 import util as U
+from util.fastApi import throwHttpPrefix
 
 
 class PayloadHeader(BaseModel):
@@ -72,7 +73,7 @@ def initEndpoints(app: FastAPI):
         try:
             return {"data": data}
         except Exception as e:
-            U.logPrefixE(prefix, e)
+            throwHttpPrefix(prefix, e)
 
     @app.post("/payloadFull")
     async def payloadFull(data: PayloadHeaderBody):
@@ -81,4 +82,4 @@ def initEndpoints(app: FastAPI):
         try:
             return {"data": data}
         except Exception as e:
-            U.logPrefixE(prefix, e)
+            throwHttpPrefix(prefix, e)
