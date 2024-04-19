@@ -36,7 +36,11 @@ def onJobPdf2image(jobId: str, jobResult: QueueJobResult):
 def initEndpoints(app: FastAPI):
     U.logD(f"{initEndpoints.__name__}[{__file__.split('/')[-1]}] loading...")
 
-    @app.get("/hello", response_model=SimpleRes)
+    @app.get(
+        "/hello",
+        response_model=SimpleRes,
+        description="This is most basic API that echoes the data you requested!<br>Have Fun and try it out!!",
+    )
     @app.post("/hello", response_model=SimpleRes)
     async def hello(data: str = Body(..., embed=True)):
         funcName = hello.__name__
