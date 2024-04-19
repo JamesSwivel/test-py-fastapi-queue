@@ -9,6 +9,7 @@ import util as U
 from util.fastApi import throwHttpPrefix
 from .worker.types import QueueJobResult
 
+
 class SimpleRes(BaseModel):
     data: str
 
@@ -35,7 +36,6 @@ def onJobPdf2image(jobId: str, jobResult: QueueJobResult):
 def initEndpoints(app: FastAPI):
     U.logD(f"{initEndpoints.__name__}[{__file__.split('/')[-1]}] loading...")
 
-
     @app.get("/hello", response_model=SimpleRes)
     @app.post("/hello", response_model=SimpleRes)
     async def hello(data: str = Body(..., embed=True)):
@@ -54,6 +54,13 @@ def initEndpoints(app: FastAPI):
         res = {"data": f"received data={data}!", "password": "secret"}
         return res
 
+    ## NOTE: include_in_schema=False to hide endpoint shown in the swagger
+    @app.post("/helloHidden", response_model=SimpleRes, include_in_schema=False)
+    async def helloHidden(data: str = Body(..., embed=True)):
+        if data == "throw":
+            raise Exception(f"requested to throw exception")
+        res = {"data": f"received data={data}!", "password": "secret"}
+        return res
 
     @app.post("/getInfo", response_model=SimpleRes)
     async def get_info(data: str = Body(..., embed=True)):
