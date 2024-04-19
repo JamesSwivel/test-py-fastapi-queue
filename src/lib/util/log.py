@@ -250,12 +250,13 @@ class Log:
         now = datetime.datetime.now()
         nowEpms = int(now.timestamp() * 1000)
         nowStr = now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        messageNoNewline = "`".join(message.split("\n"))
         print(
             (
                 f"{'' if hdColor == '' else cls.COLOR_YELLOW}"
                 f"{nowStr}`{hdColor}{logType}"
                 f"{'' if hdColor == '' else cls.COLOR_NONE }`"
-                f"{msgColor}{message}"
+                f"{msgColor}{messageNoNewline}"
                 f"{'' if msgColor == '' else cls.COLOR_NONE }"
             ),
             ## In case of 'E" log, use stderr instead of stdout
