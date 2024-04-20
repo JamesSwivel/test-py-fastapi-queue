@@ -38,6 +38,7 @@ def main():
     funcName = main.__name__
     prefix = funcName
     try:
+        ## NOTE: asyncio.run(xxx) blocks until the async function xxx finishes running
         fastApiServer = asyncio.run(FastApiServer.initServer())
         uvicorn.run(fastApiServer, host="0.0.0.0", port=8000)
     except Exception as e:
