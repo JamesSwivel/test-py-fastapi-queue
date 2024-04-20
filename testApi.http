@@ -156,3 +156,20 @@ POST {{HostAddress}}/validateNestedPayload
 Accept: application/json
 
 {}
+
+
+### POST pathParam + payload
+POST {{HostAddress}}/pathParam/SEND/1?s1=swivel software limited&s2=Hong Kong Science Park
+Accept: application/json
+
+{ 
+  "data": "hello world",
+  "message": "yes, hello to you too"
+}
+
+
+### POST pathParam (without id or action)
+POST {{HostAddress}}/pathParam/hello/
+Accept: application/json
+
+{}
